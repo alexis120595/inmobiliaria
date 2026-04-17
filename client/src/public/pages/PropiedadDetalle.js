@@ -1,6 +1,6 @@
-import API_URL from '../../config';
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import mockProperties from '../data/mockProperties';
 
 const PropiedadDetalle = () => {
   const { id } = useParams();
@@ -9,20 +9,9 @@ const PropiedadDetalle = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/propiedades/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) {
-          setPropiedad(null);
-        } else {
-          setPropiedad(data);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching property data:', err);
-        setLoading(false);
-      });
+    const foundProperty = mockProperties.find((item) => String(item.id) === String(id));
+    setPropiedad(foundProperty || null);
+    setLoading(false);
   }, [id]);
 
   if (loading) {
@@ -232,7 +221,7 @@ const PropiedadDetalle = () => {
                 </div>
                 <div>
                   <h4 style={{ margin: '0 0 5px 0', fontSize: '1.05rem', color: '#1e293b' }}>{propiedad.Usuario ? propiedad.Usuario.nombre : 'Agente Autorizado'}</h4>
-                  <a href="#" style={{ color: '#dc2626', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>Ver anuncios</a>
+                  <Link to="/propiedades" style={{ color: '#dc2626', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>Ver anuncios</Link>
                 </div>
               </div>
 
@@ -249,7 +238,7 @@ const PropiedadDetalle = () => {
                 </select>
 
                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '5px 0', lineHeight: 1.4 }}>
-                  Al enviar el formulario, estoy de acuerdo con los <a href="#" style={{ color: '#dc2626', textDecoration: 'none' }}>Términos de uso</a>.
+                  Al enviar el formulario, estoy de acuerdo con los <Link to="/sobre-nosotros" style={{ color: '#dc2626', textDecoration: 'none' }}>Términos de uso</Link>.
                 </p>
 
                 <button type="button" className="btn-primary" style={{ padding: '14px', borderRadius: '4px', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '1rem', marginTop: '5px', width: '100%', boxSizing: 'border-box' }}>

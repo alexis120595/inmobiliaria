@@ -1,6 +1,6 @@
-import API_URL from '../../config';
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import mockProperties from '../data/mockProperties';
 
 const Propiedades = () => {
   const [propiedades, setPropiedades] = useState([]);
@@ -15,16 +15,8 @@ const Propiedades = () => {
     : propiedades;
 
   useEffect(() => {
-    fetch(`${API_URL}/api/propiedades`)
-      .then(res => res.json())
-      .then(data => {
-        setPropiedades(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching propiedades:', err);
-        setLoading(false);
-      });
+    setPropiedades(mockProperties);
+    setLoading(false);
   }, []);
 
   const getDaysAgo = (dateString) => {
