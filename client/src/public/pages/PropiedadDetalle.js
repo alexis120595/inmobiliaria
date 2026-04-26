@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import mockProperties from '../data/mockProperties';
+import API_URL from '../../config';
 
 const PropiedadDetalle = () => {
   const { id } = useParams();
@@ -9,9 +9,18 @@ const PropiedadDetalle = () => {
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
 
   useEffect(() => {
-    const foundProperty = mockProperties.find((item) => String(item.id) === String(id));
-    setPropiedad(foundProperty || null);
-    setLoading(false);
+    const fetchPropiedad = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/propiedades/${id}`);
+        const data = await res.json();
+        setPropiedad(data && data.id ? data : null);
+      } catch (err) {
+        console.error('Error fetching property:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPropiedad();
   }, [id]);
 
   if (loading) {
