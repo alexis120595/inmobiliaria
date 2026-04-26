@@ -32,7 +32,7 @@ const initialForm = {
 };
 
 const Propiedades = () => {
-  const [propiedades, setPropiedades] = useState([]);
+  const [, setPropiedades] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [caracteristicasBD, setCaracteristicasBD] = useState([]);
   const [form, setForm] = useState(initialForm);

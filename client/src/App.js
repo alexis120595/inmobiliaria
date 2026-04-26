@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import PublicRoutes from './public/PublicRoutes';
 import AdminRoutes from './admin/AdminRoutes'; // Importamos panel de admin
 import './App.css';
