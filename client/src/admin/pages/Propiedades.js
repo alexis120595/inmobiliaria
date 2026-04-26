@@ -36,6 +36,7 @@ const Propiedades = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [caracteristicasBD, setCaracteristicasBD] = useState([]);
   const [form, setForm] = useState(initialForm);
+  const [archivos, setArchivos] = useState([]);
   const [editId, setEditId] = useState(null);
 
   const fetchData = async () => {
@@ -66,6 +67,10 @@ const Propiedades = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = e => {
+    setArchivos(Array.from(e.target.files));
+  };
+
   const handleCheckboxChange = (id) => {
     setForm(prev => {
       const isSelected = prev.caracteristicas.includes(id);
@@ -78,28 +83,41 @@ const Propiedades = () => {
     });
   };
 
-
   const handleSubmit = async e => {
     e.preventDefault();
     const method = editId ? 'PUT' : 'POST';
     const url = editId ? `${API}/propiedades/${editId}` : `${API}/propiedades`;
     
+    const formData = new FormData();
+    
     const payload = { ...form };
-    payload.imagenes = [form.imagen1, form.imagen2, form.imagen3].filter(Boolean);
+    const imagenesUrls = [form.imagen1, form.imagen2, form.imagen3].filter(Boolean);
     delete payload.imagen1;
     delete payload.imagen2;
     delete payload.imagen3;
 
-    // Convertir strings vacíos a null para evitar errores de tipo en la BD
+    // Agregar campos de texto al FormData
     Object.keys(payload).forEach(key => {
-      if (payload[key] === '') payload[key] = null;
+      if (key === 'caracteristicas') {
+        payload[key].forEach(c => formData.append('caracteristicas[]', c));
+      } else {
+        const val = payload[key] === '' ? '' : payload[key]; // backend expects empty string or value
+        formData.append(key, val);
+      }
+    });
+
+    // Agregar URLs de imagenes si hay
+    imagenesUrls.forEach(img => formData.append('imagenes[]', img));
+
+    // Agregar archivos físicos
+    archivos.forEach(file => {
+      formData.append('imagenes_archivos', file);
     });
 
     try {
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
       });
       
       if (!res.ok) {
@@ -109,8 +127,15 @@ const Propiedades = () => {
       }
 
       setForm(initialForm);
+      setArchivos([]);
       setEditId(null);
+      
+      // Reset input file (uncontrolled)
+      const fileInput = document.getElementById('imagenes_archivos_input');
+      if (fileInput) fileInput.value = '';
+
       alert('¡Propiedad guardada exitosamente!');
+      fetchData();
     } catch (err) {
       alert('Error de conexión con el servidor.');
     }
@@ -154,11 +179,17 @@ const Propiedades = () => {
           
           <textarea className="form-control" name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Descripción de la propiedad" style={{ width: '100%', marginTop: '1.5rem', minHeight: '100px' }} />
           
-          <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 600 }}>Imágenes (URLs)</h3>
+          <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 600 }}>Imágenes (Sube archivos o usa URLs)</h3>
+          
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.9rem' }}>Subir archivos desde la PC:</label>
+            <input id="imagenes_archivos_input" className="form-control" type="file" accept="image/*" multiple onChange={handleFileChange} />
+          </div>
+
           <div className="grid grid-cols-3">
-            <input className="form-control" name="imagen1" value={form.imagen1} onChange={handleChange} placeholder="URL Imagen Principal" />
-            <input className="form-control" name="imagen2" value={form.imagen2} onChange={handleChange} placeholder="URL Imagen 2" />
-            <input className="form-control" name="imagen3" value={form.imagen3} onChange={handleChange} placeholder="URL Imagen 3" />
+            <input className="form-control" name="imagen1" value={form.imagen1} onChange={handleChange} placeholder="URL Imagen 1 (Opcional)" />
+            <input className="form-control" name="imagen2" value={form.imagen2} onChange={handleChange} placeholder="URL Imagen 2 (Opcional)" />
+            <input className="form-control" name="imagen3" value={form.imagen3} onChange={handleChange} placeholder="URL Imagen 3 (Opcional)" />
           </div>
 
           <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 600 }}>Características</h3>
@@ -178,7 +209,7 @@ const Propiedades = () => {
 
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-start' }}>
             <button className="btn btn-primary" type="submit">Guardar Propiedad</button>
-            <button className="btn btn-secondary" type="button" onClick={() => { setForm(initialForm); setEditId(null); }}>Limpiar</button>
+            <button className="btn btn-secondary" type="button" onClick={() => { setForm(initialForm); setArchivos([]); setEditId(null); document.getElementById('imagenes_archivos_input').value = ''; }}>Limpiar</button>
           </div>
         </form>
       </div>

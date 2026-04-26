@@ -16,6 +16,7 @@ const initialForm = {
 const Agentes = () => {
   const [agentes, setAgentes] = useState([]);
   const [form, setForm] = useState(initialForm);
+  const [file, setFile] = useState(null);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
@@ -33,16 +34,33 @@ const Agentes = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = e => {
+    setFile(e.target.files[0]);
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     const method = editId ? 'PUT' : 'POST';
     const url = editId ? `${API}/usuarios/${editId}` : `${API}/usuarios`;
+    
+    const formData = new FormData();
+    if (file) {
+      formData.append('foto', file);
+    } else {
+      formData.append('foto_url', form.foto_url);
+    }
+    formData.append('nombre', form.nombre);
+    formData.append('email', form.email);
+    formData.append('telefono', form.telefono);
+    formData.append('password_hash', form.password_hash);
+    formData.append('rol', form.rol);
+
     await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
+      body: formData
     });
     setForm(initialForm);
+    setFile(null);
     setEditId(null);
     setShowForm(false);
     fetchData();
@@ -50,6 +68,7 @@ const Agentes = () => {
 
   const handleEdit = a => {
     setForm({ ...a, password_hash: '' });
+    setFile(null);
     setEditId(a.id);
     setShowForm(true);
   };
@@ -67,7 +86,7 @@ const Agentes = () => {
         <h1 className="page-title" style={{ marginBottom: 0 }}>Gestión de Agentes</h1>
         <button 
           className="btn btn-primary" 
-          onClick={() => { setShowForm(!showForm); if(!showForm) { setForm(initialForm); setEditId(null); } }}
+          onClick={() => { setShowForm(!showForm); if(!showForm) { setForm(initialForm); setFile(null); setEditId(null); } }}
         >
           {showForm ? 'Ocultar Formulario' : 'Nuevo Agente'}
         </button>
@@ -81,12 +100,13 @@ const Agentes = () => {
               <input className="form-control" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required />
               <input className="form-control" name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" required />
               <input className="form-control" name="telefono" value={form.telefono} onChange={handleChange} placeholder="Teléfono" />
-              <input className="form-control" name="foto_url" value={form.foto_url} onChange={handleChange} placeholder="Foto URL" />
-              <input className="form-control" name="password_hash" value={form.password_hash} onChange={handleChange} placeholder="Contraseña (hash)" type="password" required={!editId} />
+              <input className="form-control" name="foto_url" value={form.foto_url} onChange={handleChange} placeholder="O Foto URL (opcional)" required={!file && !editId} />
+              <input className="form-control" name="foto" type="file" accept="image/*" onChange={handleFileChange} style={{ gridColumn: 'span 2' }} />
+              <input className="form-control" name="password_hash" value={form.password_hash} onChange={handleChange} placeholder="Contraseña (hash)" type="password" required={!editId} style={{ gridColumn: 'span 2' }} />
             </div>
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-start' }}>
               <button type="submit" className="btn btn-primary">{editId ? 'Actualizar' : 'Crear Agente'}</button>
-              <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditId(null); setForm(initialForm); }}>Cancelar</button>
+              <button type="button" className="btn btn-secondary" onClick={() => { setShowForm(false); setEditId(null); setFile(null); setForm(initialForm); }}>Cancelar</button>
             </div>
           </form>
         </div>

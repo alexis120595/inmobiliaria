@@ -36,14 +36,24 @@ exports.getById = async (req, res) => {
 // Crear propiedad
 exports.create = async (req, res) => {
   try {
-    const { imagenes, caracteristicas, ...propiedadData } = req.body;
+    const { caracteristicas, ...propiedadData } = req.body;
+    let imagenes = req.body.imagenes || [];
+    if (!Array.isArray(imagenes)) {
+      imagenes = [imagenes];
+    }
+    
+    if (req.files && req.files.length > 0) {
+      const uploadedUrls = req.files.map(file => file.path);
+      imagenes = [...imagenes, ...uploadedUrls];
+    }
+
     const propiedad = await Propiedad.create(propiedadData);
     
     if (caracteristicas && Array.isArray(caracteristicas)) {
       await propiedad.setCaracteristicas(caracteristicas);
     }
     
-    if (imagenes && Array.isArray(imagenes) && imagenes.length > 0) {
+    if (imagenes && imagenes.length > 0) {
       const imagenesArray = imagenes.map((url, index) => ({
         url,
         orden: index + 1,
@@ -69,7 +79,18 @@ exports.create = async (req, res) => {
 // Actualizar propiedad
 exports.update = async (req, res) => {
   try {
-    const { imagenes, caracteristicas, ...propiedadData } = req.body;
+    const { caracteristicas, ...propiedadData } = req.body;
+    
+    let imagenes = req.body.imagenes || [];
+    if (!Array.isArray(imagenes)) {
+      imagenes = [imagenes];
+    }
+    
+    if (req.files && req.files.length > 0) {
+      const uploadedUrls = req.files.map(file => file.path);
+      imagenes = [...imagenes, ...uploadedUrls];
+    }
+
     const propiedad = await Propiedad.findByPk(req.params.id);
     if (!propiedad) return res.status(404).json({ error: 'Propiedad no encontrada' });
     
@@ -79,7 +100,7 @@ exports.update = async (req, res) => {
       await propiedad.setCaracteristicas(caracteristicas);
     }
     
-    if (imagenes && Array.isArray(imagenes)) {
+    if (imagenes && imagenes.length > 0) {
       await Imagen.destroy({ where: { propiedad_id: propiedad.id } });
       const imagenesArray = imagenes.map((url, index) => ({
         url,

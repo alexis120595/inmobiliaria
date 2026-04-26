@@ -21,7 +21,11 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const usuario = await Usuario.create(req.body);
+    let bodyData = req.body;
+    if (req.file) {
+      bodyData.foto_url = req.file.path;
+    }
+    const usuario = await Usuario.create(bodyData);
     res.status(201).json(usuario);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -30,9 +34,13 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
+    let bodyData = req.body;
+    if (req.file) {
+      bodyData.foto_url = req.file.path;
+    }
     const usuario = await Usuario.findByPk(req.params.id);
     if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
-    await usuario.update(req.body);
+    await usuario.update(bodyData);
     res.json(usuario);
   } catch (err) {
     res.status(400).json({ error: err.message });

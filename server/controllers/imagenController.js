@@ -21,13 +21,20 @@ exports.getById = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    if (Array.isArray(req.body)) {
+    let bodyData = req.body;
+    
+    // Si se subió un archivo, la URL viene de Cloudinary
+    if (req.file) {
+      bodyData.url = req.file.path;
+    }
+
+    if (Array.isArray(bodyData)) {
       // Si se recibe un array, crear varias imágenes
-      const imagenes = await Imagen.bulkCreate(req.body);
+      const imagenes = await Imagen.bulkCreate(bodyData);
       res.status(201).json(imagenes);
     } else {
       // Si se recibe un solo objeto, crear una imagen
-      const imagen = await Imagen.create(req.body);
+      const imagen = await Imagen.create(bodyData);
       res.status(201).json(imagen);
     }
   } catch (err) {

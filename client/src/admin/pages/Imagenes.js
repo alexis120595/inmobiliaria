@@ -10,6 +10,7 @@ const initialForm = {
 
 const Imagenes = () => {
   const [form, setForm] = useState(initialForm);
+  const [file, setFile] = useState(null);
   const [propiedades, setPropiedades] = useState([]);
   const [mensaje, setMensaje] = useState('');
 
@@ -19,26 +20,34 @@ const Imagenes = () => {
       .then(data => setPropiedades(data));
   }, []);
 
-
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = e => {
+    setFile(e.target.files[0]);
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
     setMensaje('');
-    const body = {
-      url: form.url,
-      propiedad_id: form.propiedadId
-    };
+    
+    const formData = new FormData();
+    if (file) {
+      formData.append('imagen', file);
+    } else {
+      formData.append('url', form.url);
+    }
+    formData.append('propiedad_id', form.propiedadId);
+
     const res = await fetch(`${API}/imagenes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: formData
     });
     if (res.ok) {
       setMensaje('Imagen asociada correctamente');
       setForm(initialForm);
+      setFile(null);
     } else {
       setMensaje('Error al asociar la imagen');
     }
@@ -50,7 +59,8 @@ const Imagenes = () => {
       <div className="card" style={{ maxWidth: '500px', margin: '0 auto' }}>
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1">
-            <input className="form-control" name="url" value={form.url} onChange={handleChange} placeholder="URL de la imagen" required />
+            <input className="form-control" name="imagen" type="file" accept="image/*" onChange={handleFileChange} required={!form.url} />
+            <input className="form-control" name="url" value={form.url} onChange={handleChange} placeholder="O URL de la imagen (opcional)" required={!file} />
             <select className="form-control" name="propiedadId" value={form.propiedadId} onChange={handleChange} required>
               <option value="">Selecciona una propiedad</option>
               {propiedades.map(p => (
