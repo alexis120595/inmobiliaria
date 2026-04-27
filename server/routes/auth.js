@@ -4,9 +4,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Usuario } = require('../models');
 
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  return secret && secret.trim() ? secret : null;
+};
+
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      return res.status(500).json({ error: 'Configuracion incompleta del servidor: falta JWT_SECRET.' });
+    }
+
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -33,7 +43,7 @@ router.post('/login', async (req, res) => {
         email: usuario.email, 
         rol: usuario.rol 
       },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: '24h' }
     );
 
@@ -55,6 +65,11 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/me — obtener datos del usuario logueado
 router.get('/me', async (req, res) => {
   try {
+    const jwtSecret = getJwtSecret();
+    if (!jwtSecret) {
+      return res.status(500).json({ error: 'Configuracion incompleta del servidor: falta JWT_SECRET.' });
+    }
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     
@@ -62,7 +77,7 @@ router.get('/me', async (req, res) => {
       return res.status(401).json({ error: 'No autenticado.' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, jwtSecret);
     const usuario = await Usuario.findByPk(decoded.id, {
       attributes: { exclude: ['password_hash'] }
     });

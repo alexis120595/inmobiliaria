@@ -10,6 +10,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+if (!process.env.JWT_SECRET || !process.env.JWT_SECRET.trim()) {
+  console.warn('ADVERTENCIA: JWT_SECRET no esta configurado. El login de admin fallara hasta definir esta variable de entorno.');
+}
+
 
 // Rutas
 app.use('/api/propiedades', require('./routes/propiedades'));
