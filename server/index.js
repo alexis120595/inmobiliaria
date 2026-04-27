@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const sequelize = require('./config/database');
 const models = require('./models');
+const seedAdmin = require('./seeders/seedAdmin');
 
 const app = express();
 app.use(cors());
@@ -16,7 +17,7 @@ app.use('/api/contactos', require('./routes/contactos'));
 app.use('/api/usuarios', require('./routes/usuarios'));
 app.use('/api/imagenes', require('./routes/imagenes'));
 app.use('/api/caracteristicas', require('./routes/caracteristicas'));
-// app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', require('./routes/auth'));
 
 
 // Test conexión y sincronización de modelos
@@ -25,7 +26,10 @@ sequelize.authenticate()
     console.log('Conexión a PostgreSQL exitosa');
     return sequelize.sync();
   })
-  .then(() => console.log('Modelos sincronizados correctamente'))
+  .then(() => {
+    console.log('Modelos sincronizados correctamente');
+    return seedAdmin();
+  })
   .catch(err => console.error('Error de conexión o sincronización:', err));
 
 const PORT = process.env.PORT || 4000;

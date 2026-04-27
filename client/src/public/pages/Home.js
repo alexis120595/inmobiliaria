@@ -13,9 +13,8 @@ const Home = () => {
             Descubre las mejores propiedades con atención exclusiva y personalizada. 
             Calidad, diseño y ubicación.
           </p>
-          <div className="hero-actions">
-            <Link to="/propiedades" className="btn-primary">Ver Propiedades</Link>
-            <Link to="/contacto" className="btn-secondary">Contáctanos</Link>
+          <div className="hero-actions" style={{ justifyContent: 'center' }}>
+            <Link to="/contacto" className="btn btn-primary hero-cta-btn">Quiero Consultar</Link>
           </div>
         </div>
       </section>

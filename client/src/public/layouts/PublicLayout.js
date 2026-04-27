@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import WhatsAppButton from '../components/WhatsAppButton';
 
 const PublicLayout = () => {
   return (
@@ -10,6 +11,7 @@ const PublicLayout = () => {
       <main className="public-main-content">
         <Outlet />
       </main>
+      <WhatsAppButton />
       <Footer />
     </div>
   );
