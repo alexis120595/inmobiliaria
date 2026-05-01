@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../admin/context/AuthContext';
 
-const Login = () => {
+const Acceso = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,8 +17,12 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(email, password, { requiredRole: 'admin' });
-      navigate('/admin');
+      const data = await login(email, password);
+      if (data?.usuario?.rol === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (err) {
       setError(err.message || 'No fue posible iniciar sesión.');
     } finally {
@@ -29,9 +34,9 @@ const Login = () => {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
-          <div className="login-logo">🏠</div>
-          <h1 className="login-title">Panel de Administración</h1>
-          <p className="login-subtitle">Ingresa tus credenciales para acceder</p>
+          <div className="login-logo">🔐</div>
+          <h1 className="login-title">Iniciar Sesión</h1>
+          <p className="login-subtitle">Accede a tu cuenta para continuar</p>
         </div>
 
         {error && (
@@ -48,7 +53,7 @@ const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@inmobiliaria.com"
+              placeholder="tu@email.com"
               required
               autoFocus
             />
@@ -66,11 +71,7 @@ const Login = () => {
             />
           </div>
 
-          <button 
-            type="submit" 
-            className="login-btn"
-            disabled={loading}
-          >
+          <button type="submit" className="login-btn" disabled={loading}>
             {loading ? (
               <>
                 <span className="login-spinner-small" />
@@ -83,11 +84,11 @@ const Login = () => {
         </form>
 
         <div className="login-footer">
-          <a href="/" className="login-back-link">← Volver al sitio web</a>
+          <Link to="/registro" className="login-back-link">¿No tienes cuenta? Regístrate</Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default Acceso;

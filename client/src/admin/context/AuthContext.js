@@ -2,6 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import API_URL from '../../config';
 
 const AuthContext = createContext(null);
+const AUTH_TOKEN_KEY = 'auth_token';
+const LEGACY_ADMIN_TOKEN_KEY = 'admin_token';
 
 const parseApiResponse = async (res) => {
   const contentType = res.headers.get('content-type') || '';
@@ -23,13 +25,23 @@ const parseApiResponse = async (res) => {
 
 export const AuthProvider = ({ children }) => {
   const [usuario, setUsuario] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('admin_token'));
+  const [token, setToken] = useState(localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(LEGACY_ADMIN_TOKEN_KEY));
   const [loading, setLoading] = useState(true);
+
+  const getAuthHeaders = (extraHeaders = {}) => {
+    const savedToken = token || localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(LEGACY_ADMIN_TOKEN_KEY);
+    if (!savedToken) return { ...extraHeaders };
+
+    return {
+      Authorization: `Bearer ${savedToken}`,
+      ...extraHeaders
+    };
+  };
 
   // Al montar, verificar si hay un token guardado
   useEffect(() => {
     const verificarToken = async () => {
-      const savedToken = localStorage.getItem('admin_token');
+      const savedToken = localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(LEGACY_ADMIN_TOKEN_KEY);
       if (savedToken) {
         try {
           const res = await fetch(`${API_URL}/api/auth/me`, {
@@ -39,14 +51,18 @@ export const AuthProvider = ({ children }) => {
             const data = await parseApiResponse(res);
             setUsuario(data);
             setToken(savedToken);
+            localStorage.setItem(AUTH_TOKEN_KEY, savedToken);
+            localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
           } else {
             // Token inválido, limpiar
-            localStorage.removeItem('admin_token');
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
             setToken(null);
             setUsuario(null);
           }
         } catch (err) {
-          localStorage.removeItem('admin_token');
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
           setToken(null);
           setUsuario(null);
         }
@@ -56,7 +72,15 @@ export const AuthProvider = ({ children }) => {
     verificarToken();
   }, []);
 
-  const login = async (email, password) => {
+  const applyAuthSession = (data) => {
+    localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+    localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
+    setToken(data.token);
+    setUsuario(data.usuario);
+  };
+
+  const login = async (email, password, options = {}) => {
+    const { requiredRole } = options;
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,14 +93,34 @@ export const AuthProvider = ({ children }) => {
       throw new Error(data.error || 'Error al iniciar sesión');
     }
 
-    localStorage.setItem('admin_token', data.token);
-    setToken(data.token);
-    setUsuario(data.usuario);
+    if (requiredRole && data?.usuario?.rol !== requiredRole) {
+      throw new Error('No tienes permisos para acceder a esta sección.');
+    }
+
+    applyAuthSession(data);
+    return data;
+  };
+
+  const register = async ({ nombre, email, password, telefono }) => {
+    const res = await fetch(`${API_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, email, password, telefono })
+    });
+
+    const data = await parseApiResponse(res);
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Error al crear la cuenta');
+    }
+
+    applyAuthSession(data);
     return data;
   };
 
   const logout = () => {
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
     setToken(null);
     setUsuario(null);
   };
@@ -86,7 +130,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, token, loading, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ usuario, token, loading, login, register, logout, isAuthenticated, getAuthHeaders }}>
       {children}
     </AuthContext.Provider>
   );

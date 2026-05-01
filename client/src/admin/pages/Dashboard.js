@@ -1,10 +1,12 @@
 import API_URL from '../../config';
 import React, { useEffect, useState } from 'react';
 import DashboardCard from '../components/DashboardCard';
+import { useAuth } from '../context/AuthContext';
 
 const API = `${API_URL}/api`;
 
 const Dashboard = () => {
+  const { getAuthHeaders } = useAuth();
   const [stats, setStats] = useState({
     propiedades: 0,
     agentes: 0,
@@ -18,10 +20,10 @@ const Dashboard = () => {
       try {
         const [prop, ag, img, car, con] = await Promise.all([
           fetch(`${API}/propiedades`).then(r => r.json()),
-          fetch(`${API}/usuarios`).then(r => r.json()),
+          fetch(`${API}/usuarios`, { headers: getAuthHeaders() }).then(r => r.json()),
           fetch(`${API}/imagenes`).then(r => r.json()),
           fetch(`${API}/caracteristicas`).then(r => r.json()),
-          fetch(`${API}/contactos`).then(r => r.json()),
+          fetch(`${API}/contactos`, { headers: getAuthHeaders() }).then(r => r.json()),
         ]);
         setStats({
           propiedades: prop.length,
@@ -35,7 +37,7 @@ const Dashboard = () => {
       }
     };
     fetchStats();
-  }, []);
+  }, [getAuthHeaders]);
 
   return (
     <div>

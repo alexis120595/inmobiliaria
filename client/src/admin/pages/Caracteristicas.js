@@ -1,9 +1,11 @@
 import API_URL from '../../config';
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const API = `${API_URL}/api`;
 
 const Caracteristicas = () => {
+  const { getAuthHeaders } = useAuth();
   const [caracteristicas, setCaracteristicas] = useState([]);
   const [nombre, setNombre] = useState('');
   const [mensaje, setMensaje] = useState('');
@@ -31,7 +33,7 @@ const Caracteristicas = () => {
     try {
       const res = await fetch(`${API}/caracteristicas`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ nombre })
       });
       
@@ -50,7 +52,10 @@ const Caracteristicas = () => {
   const handleDelete = async (id) => {
     if (window.confirm('¿Seguro que deseas eliminar esta característica?')) {
       try {
-        const res = await fetch(`${API}/caracteristicas/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API}/caracteristicas/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
         if(res.ok) fetchData();
       } catch(e) {
         console.error(e);

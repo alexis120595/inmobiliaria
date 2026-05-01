@@ -28,7 +28,7 @@ const verifyToken = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (req.user && (req.user.rol === 'admin' || req.user.rol === 'agente')) {
+  if (req.user && req.user.rol === 'admin') {
     next();
   } else {
     return res.status(403).json({ error: 'No tienes permisos de administrador.' });

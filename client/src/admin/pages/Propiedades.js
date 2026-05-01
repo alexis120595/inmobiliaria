@@ -1,5 +1,6 @@
 import API_URL from '../../config';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const API = `${API_URL}/api`;
 
@@ -32,6 +33,7 @@ const initialForm = {
 };
 
 const Propiedades = () => {
+  const { getAuthHeaders } = useAuth();
   const [propiedades, setPropiedades] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [caracteristicasBD, setCaracteristicasBD] = useState([]);
@@ -40,29 +42,31 @@ const Propiedades = () => {
   const [editId, setEditId] = useState(null);
   const [vista, setVista] = useState('formulario'); // 'formulario' o 'lista'
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const res = await fetch(`${API}/propiedades`);
     const data = await res.json();
     setPropiedades(data);
-  };
+  }, []);
 
-  const fetchUsuarios = async () => {
-    const res = await fetch(`${API}/usuarios`);
+  const fetchUsuarios = useCallback(async () => {
+    const res = await fetch(`${API}/usuarios`, {
+      headers: getAuthHeaders()
+    });
     const data = await res.json();
     setUsuarios(data.filter(u => u.rol === 'agente'));
-  };
+  }, [getAuthHeaders]);
 
-  const fetchCaracteristicas = async () => {
+  const fetchCaracteristicas = useCallback(async () => {
     const res = await fetch(`${API}/caracteristicas`);
     const data = await res.json();
     setCaracteristicasBD(data);
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
     fetchUsuarios();
     fetchCaracteristicas();
-  }, []);
+  }, [fetchData, fetchUsuarios, fetchCaracteristicas]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -118,6 +122,7 @@ const Propiedades = () => {
     try {
       const res = await fetch(url, {
         method,
+        headers: getAuthHeaders(),
         body: formData
       });
       
@@ -179,7 +184,10 @@ const Propiedades = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta propiedad? Esta acción no se puede deshacer.')) return;
     try {
-      const res = await fetch(`${API}/propiedades/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${API}/propiedades/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
       if (res.ok) {
         alert('Propiedad eliminada correctamente.');
         fetchData();

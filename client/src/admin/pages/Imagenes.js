@@ -1,5 +1,6 @@
 import API_URL from '../../config';
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 
 const API = `${API_URL}/api`;
 
@@ -9,6 +10,7 @@ const initialForm = {
 };
 
 const Imagenes = () => {
+  const { getAuthHeaders } = useAuth();
   const [form, setForm] = useState(initialForm);
   const [file, setFile] = useState(null);
   const [propiedades, setPropiedades] = useState([]);
@@ -42,6 +44,7 @@ const Imagenes = () => {
 
     const res = await fetch(`${API}/imagenes`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData
     });
     if (res.ok) {

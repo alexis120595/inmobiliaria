@@ -8,10 +8,15 @@ import Propiedades from './pages/Propiedades';
 import PropiedadDetalle from './pages/PropiedadDetalle';
 import Contacto from './pages/Contacto';
 import SobreNosotros from './pages/SobreNosotros';
+import Acceso from './pages/Acceso';
+import Registro from './pages/Registro';
 
 const PublicRoutes = () => {
   return (
     <Routes>
+      <Route path="acceso" element={<Acceso />} />
+      <Route path="registro" element={<Registro />} />
+
       <Route element={<PublicLayout />}>
         <Route index element={<Home />} />
         <Route path="propiedades" element={<Propiedades />} />

@@ -48,33 +48,33 @@ const Home = () => {
 
       {/* Categorias Section */}
       <section className="categories-section">
-        <div className="section-header text-center">
-          <h2 className="section-title">Explora por Categoría</h2>
-          <p className="section-subtitle">Encuentra exactamente lo que estás buscando</p>
-        </div>
-        
         <div className="categories-grid">
-          <Link to="/propiedades?tipo=casa" className="category-card">
-            <div className="category-icon">🏠</div>
-            <h3 className="category-name">Casas</h3>
-            <span className="category-count">124 Propiedades</span>
-          </Link>
-          
-          <Link to="/propiedades?tipo=departamento" className="category-card">
-            <div className="category-icon">🏢</div>
-            <h3 className="category-name">Departamentos</h3>
-            <span className="category-count">85 Propiedades</span>
-          </Link>
-          
-          <Link to="/propiedades?tipo=terreno" className="category-card">
-            <div className="category-icon">🏞️</div>
-            <h3 className="category-name">Terrenos</h3>
-            <span className="category-count">42 Propiedades</span>
-          </Link>
-        </div>
-        
-        <div className="text-center mt-3">
-          <Link to="/propiedades" className="btn-primary-outline">Ver Todo</Link>
+          <div className="category-card">
+            <Link to="/propiedades?tipo=terreno" className="category-img-link">
+              <img src="/assets/category_terrenos.png" alt="Terrenos" className="category-img" />
+            </Link>
+            <h3 className="category-name">TERRENOS</h3>
+            <div className="category-divider"></div>
+            <Link to="/propiedades?tipo=terreno" className="category-link">Ver Todos</Link>
+          </div>
+
+          <div className="category-card">
+            <Link to="/propiedades?tipo=departamento" className="category-img-link">
+              <img src="/assets/category_departamentos.png" alt="Departamentos" className="category-img" />
+            </Link>
+            <h3 className="category-name">DEPARTAMENTOS</h3>
+            <div className="category-divider"></div>
+            <Link to="/propiedades?tipo=departamento" className="category-link">Ver Todos</Link>
+          </div>
+
+          <div className="category-card">
+            <Link to="/propiedades?tipo=casa" className="category-img-link">
+              <img src="/assets/category_casas.png" alt="Casas" className="category-img" />
+            </Link>
+            <h3 className="category-name">CASAS</h3>
+            <div className="category-divider"></div>
+            <Link to="/propiedades?tipo=casa" className="category-link">Ver Todos</Link>
+          </div>
         </div>
       </section>
 
@@ -119,30 +119,55 @@ const Home = () => {
 
       {/* Servicios Section */}
       <section className="services-section">
-        <div className="section-header text-center">
-          <h2 className="section-title">Nuestros Servicios</h2>
-          <p className="section-subtitle">Te acompañamos en cada etapa de tu proceso inmobiliario</p>
+        <div className="services-header text-center">
+          <h2 className="services-title">SERVICIOS</h2>
+          <p className="services-subtitle">Desde Inmobiliaria Premium te asesoramos. Accedé y descargá toda la información que necesites</p>
         </div>
-        <div className="services-flex">
+        <div className="services-grid">
           <Link to="/contacto?servicio=comprar" className="service-item">
-            <div className="service-icon">🏷️</div>
-            <h4>Comprar</h4>
+            <div className="service-icon" aria-hidden="true">⌂</div>
+            <div className="service-copy">
+              <h4>COMPRAR</h4>
+              <p>¿Qué debo saber al comprar un inmueble?</p>
+            </div>
           </Link>
           <Link to="/contacto?servicio=vender" className="service-item">
-            <div className="service-icon">🤝</div>
-            <h4>Vender</h4>
+            <div className="service-icon" aria-hidden="true">⌂</div>
+            <div className="service-copy">
+              <h4>VENDER</h4>
+              <p>¿Qué debo saber al vender un inmueble?</p>
+            </div>
           </Link>
-          <Link to="/contacto?servicio=alquilar" className="service-item">
-            <div className="service-icon">🔑</div>
-            <h4>Alquilar</h4>
-          </Link>
+
           <Link to="/contacto?servicio=tasaciones" className="service-item">
-            <div className="service-icon">📋</div>
-            <h4>Tasaciones</h4>
+            <div className="service-icon" aria-hidden="true">⌂</div>
+            <div className="service-copy">
+              <h4>TASACIONES</h4>
+              <p>Documentación, visitas, plano y escritura.</p>
+            </div>
           </Link>
-          <Link to="/sobre-nosotros" className="service-item service-all">
-            <div className="service-icon">➕</div>
-            <h4>Ver Todos</h4>
+
+          <Link to="/contacto?servicio=alquilar" className="service-item">
+            <div className="service-icon" aria-hidden="true">⌂</div>
+            <div className="service-copy">
+              <h4>ALQUILER</h4>
+              <p>Información para inquilinos.</p>
+            </div>
+          </Link>
+
+          <Link to="/propiedades" className="service-item">
+            <div className="service-icon" aria-hidden="true">⌂</div>
+            <div className="service-copy">
+              <h4>VER TODOS</h4>
+            </div>
+          </Link>
+
+          <Link to="/contacto?servicio=comprar" className="service-item">
+            <div className="service-icon" aria-hidden="true">⌂</div>
+            <div className="service-copy">
+              <h4>COMPRAR</h4>
+              <p>¿Qué debo saber al comprar un inmueble?</p>
+            </div>
           </Link>
         </div>
       </section>

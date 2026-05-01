@@ -1,6 +1,7 @@
 import API_URL from '../../config';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AgentesTable from '../components/AgentesTable';
+import { useAuth } from '../context/AuthContext';
 
 const API = `${API_URL}/api`;
 
@@ -14,6 +15,7 @@ const initialForm = {
 };
 
 const Agentes = () => {
+  const { getAuthHeaders } = useAuth();
   const [agentes, setAgentes] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [file, setFile] = useState(null);
@@ -22,15 +24,17 @@ const Agentes = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const fetchData = async () => {
-    const res = await fetch(`${API}/usuarios`);
+  const fetchData = useCallback(async () => {
+    const res = await fetch(`${API}/usuarios`, {
+      headers: getAuthHeaders()
+    });
     const data = await res.json();
     setAgentes(data.filter(u => u.rol === 'agente'));
-  };
+  }, [getAuthHeaders]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -60,7 +64,11 @@ const Agentes = () => {
     formData.append('rol', form.rol);
 
     try {
-      const res = await fetch(url, { method, body: formData });
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: formData
+      });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || 'Error al guardar el agente.');
@@ -88,7 +96,10 @@ const Agentes = () => {
 
   const handleDelete = async a => {
     if (window.confirm('¿Eliminar agente?')) {
-      await fetch(`${API}/usuarios/${a.id}`, { method: 'DELETE' });
+      await fetch(`${API}/usuarios/${a.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
       fetchData();
     }
   };
