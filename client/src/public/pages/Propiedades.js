@@ -1,18 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import API_URL from '../../config';
+import MapaPropiedades from '../components/MapaPropiedades';
 
 const Propiedades = () => {
   const [propiedades, setPropiedades] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [vistaActual, setVistaActual] = useState('lista'); // 'lista' | 'mapa'
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Leer filtros desde la URL
   const searchParams = new URLSearchParams(location.search);
-  const tipoFiltro = searchParams.get('tipo') || '';
-  
-  const propiedadesAMostrar = tipoFiltro 
-    ? propiedades.filter(p => p.tipo_propiedad && p.tipo_propiedad.toLowerCase() === tipoFiltro.toLowerCase()) 
-    : propiedades;
+  const urlTipo = searchParams.get('tipo') || '';
+  const urlOperacion = searchParams.get('operacion') || '';
+  const urlUbicacion = searchParams.get('ubicacion') || '';
+  const urlDormitorios = searchParams.get('dormitorios') || '';
+
+  // Estado local de los campos del formulario (se sincroniza con la URL)
+  const [filtroUbicacion, setFiltroUbicacion] = useState(urlUbicacion);
+  const [filtroOperacion, setFiltroOperacion] = useState(urlOperacion);
+  const [filtroTipo, setFiltroTipo] = useState(urlTipo);
+  const [filtroDormitorios, setFiltroDormitorios] = useState(urlDormitorios);
+
+  // Sincronizar estado local cuando la URL cambia (por ej. al venir del Home)
+  useEffect(() => {
+    setFiltroUbicacion(urlUbicacion);
+    setFiltroOperacion(urlOperacion);
+    setFiltroTipo(urlTipo);
+    setFiltroDormitorios(urlDormitorios);
+  }, [urlUbicacion, urlOperacion, urlTipo, urlDormitorios]);
 
   useEffect(() => {
     const fetchPropiedades = async () => {
@@ -31,6 +48,62 @@ const Propiedades = () => {
     fetchPropiedades();
   }, []);
 
+  // Filtrado basado en la URL (no en el estado local del form)
+  const propiedadesFiltradas = useMemo(() => {
+    return propiedades.filter(p => {
+      // Filtro por tipo de propiedad
+      if (urlTipo && (!p.tipo_propiedad || p.tipo_propiedad.toLowerCase() !== urlTipo.toLowerCase())) {
+        return false;
+      }
+
+      // Filtro por operación
+      if (urlOperacion && (!p.operacion || p.operacion.toLowerCase() !== urlOperacion.toLowerCase())) {
+        return false;
+      }
+
+      // Filtro por ubicación (busca en dirección, localidad, provincia, país y título)
+      if (urlUbicacion) {
+        const termino = urlUbicacion.toLowerCase();
+        const campos = [p.direccion, p.localidad, p.provincia, p.pais, p.titulo].filter(Boolean);
+        const coincide = campos.some(campo => campo.toLowerCase().includes(termino));
+        if (!coincide) return false;
+      }
+
+      // Filtro por dormitorios mínimos
+      if (urlDormitorios) {
+        const minDorm = Number(urlDormitorios);
+        if (!p.dormitorios || Number(p.dormitorios) < minDorm) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [propiedades, urlTipo, urlOperacion, urlUbicacion, urlDormitorios]);
+
+  const hayFiltrosActivos = urlTipo || urlOperacion || urlUbicacion || urlDormitorios;
+
+  // Aplicar filtros: actualiza la URL con los valores del formulario
+  const aplicarFiltros = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (filtroUbicacion.trim()) params.set('ubicacion', filtroUbicacion.trim());
+    if (filtroOperacion) params.set('operacion', filtroOperacion);
+    if (filtroTipo) params.set('tipo', filtroTipo);
+    if (filtroDormitorios) params.set('dormitorios', filtroDormitorios);
+    const queryString = params.toString();
+    navigate(queryString ? `/propiedades?${queryString}` : '/propiedades', { replace: true });
+  };
+
+  // Limpiar todos los filtros
+  const limpiarFiltros = () => {
+    setFiltroUbicacion('');
+    setFiltroOperacion('');
+    setFiltroTipo('');
+    setFiltroDormitorios('');
+    navigate('/propiedades', { replace: true });
+  };
+
   const getDaysAgo = (dateString) => {
     if (!dateString) return '';
     const diffTime = Math.abs(new Date() - new Date(dateString));
@@ -48,18 +121,23 @@ const Propiedades = () => {
       </div>
 
       <div className="properties-search-section">
-        <div className="catalog-search-form">
+        <form className="catalog-search-form" onSubmit={aplicarFiltros}>
           <div className="search-field">
             <label>Ubicación / Palabra clave</label>
             <div className="input-with-icon">
               <span className="icon">📍</span>
-              <input type="text" placeholder="¿Dónde buscas?" />
+              <input
+                type="text"
+                placeholder="¿Dónde buscas?"
+                value={filtroUbicacion}
+                onChange={(e) => setFiltroUbicacion(e.target.value)}
+              />
             </div>
           </div>
           
           <div className="search-field">
             <label>Operación</label>
-            <select>
+            <select value={filtroOperacion} onChange={(e) => setFiltroOperacion(e.target.value)}>
               <option value="">Todas</option>
               <option value="venta">Venta</option>
               <option value="alquiler">Alquiler</option>
@@ -68,7 +146,7 @@ const Propiedades = () => {
 
           <div className="search-field">
             <label>Tipo Inmueble</label>
-            <select value={tipoFiltro} onChange={(e) => navigate(e.target.value ? `?tipo=${e.target.value}` : '/propiedades')}>
+            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
               <option value="">Cualquiera</option>
               <option value="casa">Casa</option>
               <option value="departamento">Departamento</option>
@@ -78,18 +156,126 @@ const Propiedades = () => {
           
           <div className="search-field">
             <label>Hab.</label>
-            <select>
+            <select value={filtroDormitorios} onChange={(e) => setFiltroDormitorios(e.target.value)}>
               <option value="">Todas</option>
               <option value="1">1 o más</option>
+              <option value="2">2 o más</option>
+              <option value="3">3 o más</option>
+              <option value="4">4 o más</option>
             </select>
           </div>
 
-          <button className="btn-primary search-action-btn">
+          <button type="submit" className="btn-primary search-action-btn">
             🔍 Filtrar
           </button>
-        </div>
+        </form>
+
+        {/* Indicador de filtros activos */}
+        {hayFiltrosActivos && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            flexWrap: 'wrap',
+            marginTop: '1rem',
+            padding: '0.75rem 1rem',
+            background: '#fff',
+            borderRadius: '10px',
+            maxWidth: '900px',
+            margin: '1rem auto 0',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+          }}>
+            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>Filtros activos:</span>
+            {urlUbicacion && (
+              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, background: '#dbeafe', color: '#1e40af' }}>
+                📍 {urlUbicacion}
+              </span>
+            )}
+            {urlTipo && (
+              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, background: '#fef3c7', color: '#92400e', textTransform: 'capitalize' }}>
+                🏠 {urlTipo}
+              </span>
+            )}
+            {urlOperacion && (
+              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, background: '#d1fae5', color: '#065f46', textTransform: 'capitalize' }}>
+                🏷️ {urlOperacion}
+              </span>
+            )}
+            {urlDormitorios && (
+              <span style={{ padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, background: '#ede9fe', color: '#5b21b6' }}>
+                🛏️ {urlDormitorios}+ hab.
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={limpiarFiltros}
+              style={{
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                background: '#fee2e2',
+                color: '#991b1b',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+            >
+              ✕ Limpiar
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Contador de resultados + Toggle de vista */}
+      {!loading && (
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          maxWidth: '1200px', 
+          margin: '1rem auto 0.5rem',
+          padding: '0 20px'
+        }}>
+          <span style={{ fontSize: '0.9rem', color: '#64748b' }}>
+            {propiedadesFiltradas.length} {propiedadesFiltradas.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}
+            {hayFiltrosActivos ? ' con los filtros aplicados' : ''}
+          </span>
+
+          {/* Toggle Lista / Mapa */}
+          <div className="vista-toggle" id="vista-toggle">
+            <button
+              className={`vista-toggle-btn ${vistaActual === 'lista' ? 'active' : ''}`}
+              onClick={() => setVistaActual('lista')}
+              id="btn-vista-lista"
+            >
+              <span className="vista-toggle-icon">📋</span>
+              Lista
+            </button>
+            <button
+              className={`vista-toggle-btn ${vistaActual === 'mapa' ? 'active' : ''}`}
+              onClick={() => setVistaActual('mapa')}
+              id="btn-vista-mapa"
+            >
+              <span className="vista-toggle-icon">🗺️</span>
+              Mapa
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* VISTA MAPA */}
+      {vistaActual === 'mapa' && !loading && (
+        <div style={{ maxWidth: '1200px', margin: '1rem auto', padding: '0 20px' }}>
+          <MapaPropiedades 
+            propiedades={propiedadesFiltradas} 
+            height="500px"
+          />
+        </div>
+      )}
+
+      {/* VISTA LISTA (Grid de cards) */}
       <div className="properties-grid" style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
@@ -100,10 +286,31 @@ const Propiedades = () => {
       }}>
         {loading ? (
           <p style={{ textAlign: 'center', gridColumn: '1/-1' }}>Cargando propiedades...</p>
-        ) : propiedadesAMostrar.length === 0 ? (
-          <p style={{ textAlign: 'center', gridColumn: '1/-1' }}>No se encontraron propiedades{tipoFiltro ? ` para el tipo: ${tipoFiltro}` : ''}.</p>
+        ) : propiedadesFiltradas.length === 0 ? (
+          <div style={{ textAlign: 'center', gridColumn: '1/-1', padding: '3rem 1rem' }}>
+            <p style={{ fontSize: '1.2rem', color: '#64748b', marginBottom: '1rem' }}>
+              No se encontraron propiedades con los filtros seleccionados.
+            </p>
+            {hayFiltrosActivos && (
+              <button
+                onClick={limpiarFiltros}
+                style={{
+                  padding: '0.5rem 1.5rem',
+                  borderRadius: '8px',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  background: '#3b82f6',
+                  color: '#fff',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                Ver todas las propiedades
+              </button>
+            )}
+          </div>
         ) : (
-          propiedadesAMostrar.map((item) => (
+          propiedadesFiltradas.map((item) => (
             <div key={item.id} className="property-card" style={{ 
               backgroundColor: '#fff', 
               borderRadius: '8px', 

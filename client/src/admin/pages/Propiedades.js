@@ -1,8 +1,10 @@
 import API_URL from '../../config';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const API = `${API_URL}/api`;
+
+const MAX_IMAGENES = 10;
 
 const initialForm = {
   titulo: '',
@@ -26,9 +28,6 @@ const initialForm = {
   condicion: '',
   estado: 'activa',
   agente_id: '',
-  imagen1: '',
-  imagen2: '',
-  imagen3: '',
   caracteristicas: []
 };
 
@@ -39,8 +38,10 @@ const Propiedades = () => {
   const [caracteristicasBD, setCaracteristicasBD] = useState([]);
   const [form, setForm] = useState(initialForm);
   const [archivos, setArchivos] = useState([]);
+  const [previews, setPreviews] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [vista, setVista] = useState('formulario'); // 'formulario' o 'lista'
+  const [vista, setVista] = useState('formulario');
+  const fileInputRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     const res = await fetch(`${API}/propiedades`);
@@ -68,12 +69,34 @@ const Propiedades = () => {
     fetchCaracteristicas();
   }, [fetchData, fetchUsuarios, fetchCaracteristicas]);
 
+  // Liberar URLs de objeto al desmontar o al cambiar previews
+  useEffect(() => {
+    return () => {
+      previews.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previews]);
+
   const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleFileChange = e => {
-    setArchivos(Array.from(e.target.files));
+    const nuevosArchivos = Array.from(e.target.files).slice(0, MAX_IMAGENES);
+    // Si ya hay archivos seleccionados, combinar hasta el límite
+    const combinados = [...archivos, ...nuevosArchivos].slice(0, MAX_IMAGENES);
+    // Revocar previews anteriores antes de reemplazar
+    previews.forEach(url => URL.revokeObjectURL(url));
+    const nuevasPreviews = combinados.map(f => URL.createObjectURL(f));
+    setArchivos(combinados);
+    setPreviews(nuevasPreviews);
+    // Reset input para permitir re-seleccionar los mismos archivos
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (index) => {
+    URL.revokeObjectURL(previews[index]);
+    setArchivos(archivos.filter((_, i) => i !== index));
+    setPreviews(previews.filter((_, i) => i !== index));
   };
 
   const handleCheckboxChange = (id) => {
@@ -88,33 +111,35 @@ const Propiedades = () => {
     });
   };
 
+  const resetForm = () => {
+    setForm(initialForm);
+    previews.forEach(url => URL.revokeObjectURL(url));
+    setArchivos([]);
+    setPreviews([]);
+    setEditId(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     const method = editId ? 'PUT' : 'POST';
     const url = editId ? `${API}/propiedades/${editId}` : `${API}/propiedades`;
-    
+
     const formData = new FormData();
-    
-    const payload = { ...form };
-    const imagenesUrls = [form.imagen1, form.imagen2, form.imagen3].filter(Boolean);
-    delete payload.imagen1;
-    delete payload.imagen2;
-    delete payload.imagen3;
+
+    const { caracteristicas, ...payload } = form;
 
     // Agregar campos de texto al FormData
     Object.keys(payload).forEach(key => {
-      if (key === 'caracteristicas') {
-        payload[key].forEach(c => formData.append('caracteristicas[]', c));
-      } else {
-        const val = payload[key] === '' ? '' : payload[key]; // backend expects empty string or value
-        formData.append(key, val);
-      }
+      formData.append(key, payload[key] === undefined ? '' : payload[key]);
     });
 
-    // Agregar URLs de imagenes si hay
-    imagenesUrls.forEach(img => formData.append('imagenes[]', img));
+    // Agregar características
+    if (caracteristicas && Array.isArray(caracteristicas)) {
+      caracteristicas.forEach(c => formData.append('caracteristicas[]', c));
+    }
 
-    // Agregar archivos físicos
+    // Agregar archivos físicos (hasta 10)
     archivos.forEach(file => {
       formData.append('imagenes_archivos', file);
     });
@@ -125,21 +150,14 @@ const Propiedades = () => {
         headers: getAuthHeaders(),
         body: formData
       });
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         alert('Error al guardar: ' + (errorData.error || 'Verifica los campos ingresados.'));
         return;
       }
 
-      setForm(initialForm);
-      setArchivos([]);
-      setEditId(null);
-      
-      // Reset input file (uncontrolled)
-      const fileInput = document.getElementById('imagenes_archivos_input');
-      if (fileInput) fileInput.value = '';
-
+      resetForm();
       alert('¡Propiedad guardada exitosamente!');
       fetchData();
     } catch (err) {
@@ -170,13 +188,13 @@ const Propiedades = () => {
       condicion: prop.condicion || '',
       estado: prop.estado || 'activa',
       agente_id: prop.agente_id || prop.Usuario?.id || '',
-      imagen1: '',
-      imagen2: '',
-      imagen3: '',
       caracteristicas: prop.Caracteristicas ? prop.Caracteristicas.map(c => c.id) : []
     });
     setEditId(prop.id);
+    previews.forEach(url => URL.revokeObjectURL(url));
     setArchivos([]);
+    setPreviews([]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setVista('formulario');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -205,6 +223,8 @@ const Propiedades = () => {
     return `${moneda || '$'} ${num}`;
   };
 
+  const puedeAgregarMas = archivos.length < MAX_IMAGENES;
+
   return (
     <div>
       {/* Header con botones de navegación */}
@@ -218,7 +238,7 @@ const Propiedades = () => {
               📋 Ver Propiedades ({propiedades.length})
             </button>
           ) : (
-            <button className="btn btn-primary" onClick={() => { setVista('formulario'); setEditId(null); setForm(initialForm); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button className="btn btn-primary" onClick={() => { setVista('formulario'); resetForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               ➕ Nueva Propiedad
             </button>
           )}
@@ -234,22 +254,22 @@ const Propiedades = () => {
               <input className="form-control" name="tipo_propiedad" value={form.tipo_propiedad} onChange={handleChange} placeholder="Tipo (ej: Casa, Depto)" required />
               <input className="form-control" name="operacion" value={form.operacion} onChange={handleChange} placeholder="Operación" required />
               <input className="form-control" name="direccion" value={form.direccion} onChange={handleChange} placeholder="Dirección" />
-              
+
               <input className="form-control" name="localidad" value={form.localidad} onChange={handleChange} placeholder="Localidad" />
               <input className="form-control" name="provincia" value={form.provincia} onChange={handleChange} placeholder="Provincia" />
               <input className="form-control" name="pais" value={form.pais} onChange={handleChange} placeholder="País" />
               <input className="form-control" name="precio" value={form.precio} onChange={handleChange} placeholder="Precio" type="number" min="0" step="0.01" />
-              
+
               <input className="form-control" name="moneda" value={form.moneda} onChange={handleChange} placeholder="Moneda" />
               <input className="form-control" name="superficie_cubierta" value={form.superficie_cubierta} onChange={handleChange} placeholder="Sup. cubierta (m²)" type="number" min="0" step="0.01" />
               <input className="form-control" name="superficie_total" value={form.superficie_total} onChange={handleChange} placeholder="Sup. total (m²)" type="number" min="0" step="0.01" />
               <input className="form-control" name="dormitorios" value={form.dormitorios} onChange={handleChange} placeholder="Dormitorios" type="number" min="0" />
-              
+
               <input className="form-control" name="banos" value={form.banos} onChange={handleChange} placeholder="Baños" type="number" min="0" />
               <input className="form-control" name="ambientes" value={form.ambientes} onChange={handleChange} placeholder="Ambientes" type="number" min="0" />
               <input className="form-control" name="plantas" value={form.plantas} onChange={handleChange} placeholder="Plantas" type="number" min="0" />
               <input className="form-control" name="garaje" value={form.garaje} onChange={handleChange} placeholder="Garaje" type="number" min="0" />
-              
+
               <input className="form-control" name="antiguedad" value={form.antiguedad} onChange={handleChange} placeholder="Antigüedad" type="number" min="0" />
               <input className="form-control" name="condicion" value={form.condicion} onChange={handleChange} placeholder="Condición" />
               <input className="form-control" name="estado" value={form.estado} onChange={handleChange} placeholder="Estado" />
@@ -258,30 +278,166 @@ const Propiedades = () => {
                 {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
               </select>
             </div>
-            
-            <textarea className="form-control" name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Descripción de la propiedad" style={{ width: '100%', marginTop: '1.5rem', minHeight: '100px' }} />
-            
-            <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 600 }}>Imágenes (Sube archivos o usa URLs)</h3>
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '0.9rem' }}>Subir archivos desde la PC:</label>
-              <input id="imagenes_archivos_input" className="form-control" type="file" accept="image/*" multiple onChange={handleFileChange} />
-            </div>
 
-            <div className="grid grid-cols-3">
-              <input className="form-control" name="imagen1" value={form.imagen1} onChange={handleChange} placeholder="URL Imagen 1 (Opcional)" />
-              <input className="form-control" name="imagen2" value={form.imagen2} onChange={handleChange} placeholder="URL Imagen 2 (Opcional)" />
-              <input className="form-control" name="imagen3" value={form.imagen3} onChange={handleChange} placeholder="URL Imagen 3 (Opcional)" />
+            <textarea className="form-control" name="descripcion" value={form.descripcion} onChange={handleChange} placeholder="Descripción de la propiedad" style={{ width: '100%', marginTop: '1.5rem', minHeight: '100px' }} />
+
+            {/* ===== SECCIÓN DE IMÁGENES ===== */}
+            <div style={{ marginTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>Imágenes</h3>
+                <span style={{
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '20px',
+                  background: archivos.length >= MAX_IMAGENES ? '#fee2e2' : '#dbeafe',
+                  color: archivos.length >= MAX_IMAGENES ? '#991b1b' : '#1e40af'
+                }}>
+                  {archivos.length} / {MAX_IMAGENES} imágenes
+                </span>
+              </div>
+
+              {/* Zona de drop / input */}
+              {puedeAgregarMas && (
+                <label
+                  htmlFor="imagenes_archivos_input"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    border: '2px dashed var(--border-color, #d1d5db)',
+                    borderRadius: '12px',
+                    padding: '2rem',
+                    cursor: 'pointer',
+                    background: 'var(--bg-secondary, #f9fafb)',
+                    transition: 'border-color 0.2s, background 0.2s',
+                    marginBottom: previews.length > 0 ? '1rem' : 0
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary, #3b82f6)'; e.currentTarget.style.background = 'var(--bg-hover, #eff6ff)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color, #d1d5db)'; e.currentTarget.style.background = 'var(--bg-secondary, #f9fafb)'; }}
+                >
+                  <span style={{ fontSize: '2rem' }}>🖼️</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>
+                    Hacé clic para agregar imágenes
+                  </span>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted, #6b7280)' }}>
+                    Podés seleccionar varias a la vez · Máximo {MAX_IMAGENES} en total
+                  </span>
+                  <input
+                    id="imagenes_archivos_input"
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+              )}
+
+              {/* Grid de miniaturas */}
+              {previews.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+                  gap: '0.75rem',
+                  marginTop: puedeAgregarMas ? 0 : '0.5rem'
+                }}>
+                  {previews.map((src, index) => (
+                    <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color, #e5e7eb)', aspectRatio: '1' }}>
+                      <img
+                        src={src}
+                        alt={`preview-${index}`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                      {/* Overlay con número de orden */}
+                      <span style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        left: '6px',
+                        background: 'rgba(0,0,0,0.55)',
+                        color: '#fff',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        #{index + 1}
+                      </span>
+                      {/* Botón eliminar */}
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '4px',
+                          background: 'rgba(239,68,68,0.9)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '22px',
+                          height: '22px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          transition: 'background 0.2s'
+                        }}
+                        title="Quitar imagen"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+
+                  {/* Celda "Agregar más" dentro de la grilla cuando ya hay imágenes y hay lugar */}
+                  {puedeAgregarMas && (
+                    <label
+                      htmlFor="imagenes_archivos_input"
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.25rem',
+                        border: '2px dashed var(--border-color, #d1d5db)',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        background: 'var(--bg-secondary, #f9fafb)',
+                        aspectRatio: '1',
+                        transition: 'border-color 0.2s'
+                      }}
+                      title="Agregar más imágenes"
+                    >
+                      <span style={{ fontSize: '1.5rem' }}>➕</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted, #6b7280)', textAlign: 'center' }}>Agregar</span>
+                    </label>
+                  )}
+                </div>
+              )}
+
+              {/* Aviso si editando propiedad ya tiene imágenes */}
+              {editId && archivos.length === 0 && (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted, #6b7280)', marginTop: '0.5rem', fontStyle: 'italic' }}>
+                  💡 Si no subís nuevas imágenes, las imágenes actuales de la propiedad se conservarán.
+                </p>
+              )}
             </div>
 
             <h3 style={{ marginTop: '1.5rem', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: 600 }}>Características</h3>
             <div className="grid grid-cols-4" style={{ gap: '1rem' }}>
               {caracteristicasBD.map(c => (
                 <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={form.caracteristicas.includes(c.id)} 
-                    onChange={() => handleCheckboxChange(c.id)} 
+                  <input
+                    type="checkbox"
+                    checked={form.caracteristicas.includes(c.id)}
+                    onChange={() => handleCheckboxChange(c.id)}
                     style={{ cursor: 'pointer' }}
                   />
                   {c.nombre}
@@ -291,9 +447,9 @@ const Propiedades = () => {
 
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-start' }}>
               <button className="btn btn-primary" type="submit">{editId ? 'Actualizar Propiedad' : 'Guardar Propiedad'}</button>
-              <button className="btn btn-secondary" type="button" onClick={() => { setForm(initialForm); setArchivos([]); setEditId(null); const fi = document.getElementById('imagenes_archivos_input'); if(fi) fi.value = ''; }}>Limpiar</button>
+              <button className="btn btn-secondary" type="button" onClick={resetForm}>Limpiar</button>
               {editId && (
-                <button className="btn btn-secondary" type="button" onClick={() => { setForm(initialForm); setArchivos([]); setEditId(null); const fi = document.getElementById('imagenes_archivos_input'); if(fi) fi.value = ''; }}>Cancelar Edición</button>
+                <button className="btn btn-secondary" type="button" onClick={resetForm}>Cancelar Edición</button>
               )}
             </div>
           </form>
@@ -330,10 +486,10 @@ const Propiedades = () => {
                       <tr key={prop.id}>
                         <td>
                           {imagen ? (
-                            <img 
-                              src={imagen} 
-                              alt={prop.titulo} 
-                              style={{ width: '70px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e5e7eb' }} 
+                            <img
+                              src={imagen}
+                              alt={prop.titulo}
+                              style={{ width: '70px', height: '50px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #e5e7eb' }}
                             />
                           ) : (
                             <div style={{ width: '70px', height: '50px', background: '#f3f4f6', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', border: '1px solid #e5e7eb' }}>

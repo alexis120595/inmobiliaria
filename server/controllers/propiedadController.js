@@ -1,4 +1,5 @@
 const { Propiedad, Usuario, Imagen, Caracteristica } = require('../models');
+const { geocodeAddress } = require('../services/geocodingService');
 
 // Obtener todas las propiedades
 exports.getAll = async (req, res) => {
@@ -45,6 +46,20 @@ exports.create = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const uploadedUrls = req.files.map(file => file.path);
       imagenes = [...imagenes, ...uploadedUrls];
+    }
+
+    // Auto-geocodificar la dirección si no se proporcionaron coordenadas
+    if (!propiedadData.latitud || !propiedadData.longitud) {
+      const coords = await geocodeAddress(
+        propiedadData.direccion,
+        propiedadData.localidad,
+        propiedadData.provincia,
+        propiedadData.pais
+      );
+      if (coords) {
+        propiedadData.latitud = coords.latitud;
+        propiedadData.longitud = coords.longitud;
+      }
     }
 
     const propiedad = await Propiedad.create(propiedadData);
@@ -94,6 +109,26 @@ exports.update = async (req, res) => {
     const propiedad = await Propiedad.findByPk(req.params.id);
     if (!propiedad) return res.status(404).json({ error: 'Propiedad no encontrada' });
     
+    // Re-geocodificar si cambió la dirección/ubicación
+    const cambioUbicacion = 
+      propiedadData.direccion !== undefined || 
+      propiedadData.localidad !== undefined || 
+      propiedadData.provincia !== undefined ||
+      propiedadData.pais !== undefined;
+    
+    if (cambioUbicacion && !propiedadData.latitud) {
+      const coords = await geocodeAddress(
+        propiedadData.direccion || propiedad.direccion,
+        propiedadData.localidad || propiedad.localidad,
+        propiedadData.provincia || propiedad.provincia,
+        propiedadData.pais || propiedad.pais
+      );
+      if (coords) {
+        propiedadData.latitud = coords.latitud;
+        propiedadData.longitud = coords.longitud;
+      }
+    }
+
     await propiedad.update(propiedadData);
     
     if (caracteristicas && Array.isArray(caracteristicas)) {

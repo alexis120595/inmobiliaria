@@ -22,6 +22,8 @@ const Propiedad = sequelize.define('Propiedad', {
   antiguedad: { type: DataTypes.INTEGER },
   condicion: { type: DataTypes.STRING },
   estado: { type: DataTypes.STRING, defaultValue: 'activa' },
+  latitud: { type: DataTypes.DECIMAL(10, 8) },
+  longitud: { type: DataTypes.DECIMAL(11, 8) },
 }, {
   tableName: 'propiedades',
   timestamps: true,

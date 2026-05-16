@@ -28,7 +28,7 @@ app.use('/api/auth', require('./routes/auth'));
 sequelize.authenticate()
   .then(() => {
     console.log('Conexión a PostgreSQL exitosa');
-    return sequelize.sync();
+    return sequelize.sync({ alter: true });
   })
   .then(() => {
     console.log('Modelos sincronizados correctamente');
@@ -40,3 +40,4 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Servidor backend corriendo en puerto ${PORT}`);
 });
+// Trigger nodemon restart

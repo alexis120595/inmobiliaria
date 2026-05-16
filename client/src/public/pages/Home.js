@@ -1,7 +1,22 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Home = () => {
+  const navigate = useNavigate();
+  const [ubicacion, setUbicacion] = useState('');
+  const [tipo, setTipo] = useState('');
+  const [operacion, setOperacion] = useState('');
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (ubicacion.trim()) params.set('ubicacion', ubicacion.trim());
+    if (tipo) params.set('tipo', tipo);
+    if (operacion) params.set('operacion', operacion);
+    const queryString = params.toString();
+    navigate(queryString ? `/propiedades?${queryString}` : '/propiedades');
+  };
+
   return (
     <div className="home-page">
       {/* Hero Section Full Width */}
@@ -21,14 +36,19 @@ const Home = () => {
 
       {/* Buscador de Propiedades Superpuesto */}
       <div className="home-search-container">
-        <form className="home-search-form">
+        <form className="home-search-form" onSubmit={handleSearch}>
           <div className="search-field">
             <label>Ubicación</label>
-            <input type="text" placeholder="Ej. Ciudad, Zona..." />
+            <input
+              type="text"
+              placeholder="Ej. Ciudad, Zona..."
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+            />
           </div>
           <div className="search-field">
             <label>Tipo de Inmueble</label>
-            <select>
+            <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
               <option value="">Todos los tipos</option>
               <option value="casa">Casa</option>
               <option value="departamento">Departamento</option>
@@ -37,12 +57,13 @@ const Home = () => {
           </div>
           <div className="search-field">
             <label>Operación</label>
-            <select>
+            <select value={operacion} onChange={(e) => setOperacion(e.target.value)}>
+              <option value="">Todas</option>
               <option value="venta">Comprar</option>
               <option value="alquiler">Alquilar</option>
             </select>
           </div>
-          <button type="button" className="btn-primary search-btn">Buscar Propiedades</button>
+          <button type="submit" className="btn-primary search-btn">Buscar Propiedades</button>
         </form>
       </div>
 

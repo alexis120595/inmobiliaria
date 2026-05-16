@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import API_URL from '../../config';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix para el ícono de marcador de Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
+const detailMarkerIcon = new L.DivIcon({
+  className: 'custom-property-marker',
+  html: `<div class="marker-pin"><span>📍</span></div>`,
+  iconSize: [40, 48],
+  iconAnchor: [20, 48],
+  popupAnchor: [0, -48],
+});
 
 const PropiedadDetalle = () => {
   const { id } = useParams();
@@ -184,12 +203,48 @@ const PropiedadDetalle = () => {
                   </div>
                 </div>
 
-                {/* Mapa placeholder derecho */}
-                <div style={{ flex: '1', minHeight: '200px', backgroundColor: '#e2e8f0', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
-                  <img src="https://static.vecteezy.com/system/resources/previews/000/153/588/original/vector-road-map-concept-flat-style.jpg" alt="Map" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} />
-                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '2rem', color: '#2563eb' }}>
-                    <span style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>📍</span>
-                  </div>
+                {/* Mapa real de la propiedad */}
+                <div style={{ flex: '1', minHeight: '200px', borderRadius: '8px', overflow: 'hidden', position: 'relative' }}>
+                  {propiedad.latitud && propiedad.longitud ? (
+                    <MapContainer
+                      center={[parseFloat(propiedad.latitud), parseFloat(propiedad.longitud)]}
+                      zoom={15}
+                      style={{ height: '100%', width: '100%', minHeight: '250px', borderRadius: '8px' }}
+                      scrollWheelZoom={false}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <Marker
+                        position={[parseFloat(propiedad.latitud), parseFloat(propiedad.longitud)]}
+                        icon={detailMarkerIcon}
+                      >
+                        <Popup>
+                          <strong>{propiedad.titulo}</strong><br />
+                          {propiedad.direccion && <>{propiedad.direccion}<br /></>}
+                          {[propiedad.localidad, propiedad.provincia].filter(Boolean).join(', ')}
+                        </Popup>
+                      </Marker>
+                    </MapContainer>
+                  ) : (
+                    <div style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      minHeight: '250px',
+                      backgroundColor: '#f1f5f9', 
+                      borderRadius: '8px', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      color: '#94a3b8',
+                      gap: '8px'
+                    }}>
+                      <span style={{ fontSize: '2.5rem' }}>🗺️</span>
+                      <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>Ubicación no disponible</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
