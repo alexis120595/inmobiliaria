@@ -49,12 +49,12 @@ const MapaPropiedades = ({ propiedades, height = '450px' }) => {
     [propiedades]
   );
 
-  // Centro por defecto: Mendoza, Argentina
-  const defaultCenter = [-32.8895, -68.8458];
   const defaultZoom = 10;
-
+  
   // Calcular centro basado en las propiedades
   const center = useMemo(() => {
+    // Centro por defecto: Mendoza, Argentina
+    const defaultCenter = [-32.8895, -68.8458];
     if (propiedadesConMapa.length === 0) return defaultCenter;
     const avgLat = propiedadesConMapa.reduce((sum, p) => sum + parseFloat(p.latitud), 0) / propiedadesConMapa.length;
     const avgLng = propiedadesConMapa.reduce((sum, p) => sum + parseFloat(p.longitud), 0) / propiedadesConMapa.length;
