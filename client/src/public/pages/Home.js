@@ -6,6 +6,7 @@ const Home = () => {
   const [ubicacion, setUbicacion] = useState('');
   const [tipo, setTipo] = useState('');
   const [operacion, setOperacion] = useState('');
+  const [selectedFlyer, setSelectedFlyer] = useState(null);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -106,37 +107,56 @@ const Home = () => {
           <p className="section-subtitle">Mantente informado sobre el mercado y tendencias</p>
         </div>
         <div className="blog-grid">
-          <article className="blog-card">
-            <div className="blog-img-placeholder" style={{ background: 'linear-gradient(45deg, #10b981, #059669)'}}></div>
+          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_completo.jpg')}>
+            <div className="blog-img-container">
+              <img src="/assets/news_alquiler_completo.jpg" alt="Actualización Alquileres Junio 2026" className="news-flyer-img" />
+              <div className="blog-zoom-overlay">🔍 Ampliar</div>
+            </div>
             <div className="blog-content">
-              <span className="blog-date">12 Abr, 2026</span>
-              <h3 className="blog-title">Tendencias del mercado inmobiliario para este año</h3>
-              <p className="blog-excerpt">Descubre cuáles son las zonas con mayor crecimiento y plusvalía en la ciudad para tu próxima gran inversión.</p>
-              <span className="read-more">Leer Más →</span>
+              <span className="blog-date">Junio 2026</span>
+              <h3 className="blog-title">Actualización Alquileres Completo</h3>
+              <p className="blog-excerpt">Informe integral del Colegio de Corredores Públicos Inmobiliarios de Mendoza con índices trimestrales, cuatrimestrales, semestrales y anuales.</p>
+              <span className="read-more">Ver Completo →</span>
             </div>
           </article>
           
-          <article className="blog-card">
-            <div className="blog-img-placeholder" style={{ background: 'linear-gradient(45deg, #f59e0b, #d97706)'}}></div>
+          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_icl.jpg')}>
+            <div className="blog-img-container">
+              <img src="/assets/news_alquiler_icl.jpg" alt="ICL BCRA Junio 2026" className="news-flyer-img" />
+              <div className="blog-zoom-overlay">🔍 Ampliar</div>
+            </div>
             <div className="blog-content">
-              <span className="blog-date">05 Abr, 2026</span>
-              <h3 className="blog-title">5 consejos antes de comprar tu primera casa</h3>
-              <p className="blog-excerpt">Una guía esencial paso a paso para evitar errores comunes y asegurar tu inversión a largo plazo.</p>
-              <span className="read-more">Leer Más →</span>
+              <span className="blog-date">Junio 2026</span>
+              <h3 className="blog-title">Índice ICL BCRA</h3>
+              <p className="blog-excerpt">Detalle del Índice de Contratos de Locación publicado por el Banco Central para calcular los incrementos en contratos de vivienda.</p>
+              <span className="read-more">Ver Tabla →</span>
             </div>
           </article>
           
-          <article className="blog-card">
-            <div className="blog-img-placeholder" style={{ background: 'linear-gradient(45deg, #4f46e5, #4338ca)'}}></div>
+          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_casapropia.jpg')}>
+            <div className="blog-img-container">
+              <img src="/assets/news_alquiler_casapropia.jpg" alt="Índice Casa Propia Junio 2026" className="news-flyer-img" />
+              <div className="blog-zoom-overlay">🔍 Ampliar</div>
+            </div>
             <div className="blog-content">
-              <span className="blog-date">28 Mar, 2026</span>
-              <h3 className="blog-title">¿Es buen momento para invertir en bienes raíces?</h3>
-              <p className="blog-excerpt">Un exhaustivo análisis profundo sobre las tasas de interés actuales y sus proyecciones a futuro.</p>
-              <span className="read-more">Leer Más →</span>
+              <span className="blog-date">Junio 2026</span>
+              <h3 className="blog-title">Índice Casa Propia</h3>
+              <p className="blog-excerpt">Coeficiente de actualización para contratos de locación y créditos bajo la fórmula Casa Propia basados en la variación salarial.</p>
+              <span className="read-more">Ver Detalle →</span>
             </div>
           </article>
         </div>
       </section>
+
+      {/* Lightbox / Modal para visualizar los volantes completos */}
+      {selectedFlyer && (
+        <div className="flyer-modal-overlay" onClick={() => setSelectedFlyer(null)}>
+          <div className="flyer-modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="flyer-modal-close" onClick={() => setSelectedFlyer(null)}>&times;</button>
+            <img src={selectedFlyer} alt="Visualización de volante" className="flyer-modal-img" />
+          </div>
+        </div>
+      )}
 
       {/* Servicios Section */}
       <section className="services-section">

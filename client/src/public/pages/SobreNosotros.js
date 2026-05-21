@@ -1,11 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+const carouselSlides = [
+  { src: '/assets/about_recepcion.jpg', alt: 'Recepción Mariana Fernández Inmobiliaria', label: 'Nuestra Recepción', contain: false },
+  { src: '/assets/about_oficina.jpg', alt: 'Atención Personalizada', label: 'Atención Personalizada', contain: false },
+  { src: '/assets/about_cartel.jpg', alt: 'Matrícula Profesional', label: 'Matrícula Profesional — MAT 1488', contain: true },
+  { src: '/assets/about_fachada.jpg', alt: 'Fachada Mariana Fernández Servicio Inmobiliario', label: 'Nuestra Oficina', contain: false },
+];
 
 const SobreNosotros = () => {
   const [openSection, setOpenSection] = useState('hoy');
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const toggleSection = (section) => {
     setOpenSection(openSection === section ? null : section);
   };
+
+  const nextSlide = () => {
+    setCurrentIndex((prev) => (prev + 1) % carouselSlides.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
+  };
+
+  useEffect(() => {
+    const timer = setInterval(nextSlide, 4500);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="about-page">
@@ -59,44 +80,49 @@ const SobreNosotros = () => {
           </div>
         </div>
 
-        {/* Blog Section */}
-        <section className="blog-section mt-5">
+        {/* Carousel Section replacing news/duo/banner */}
+        <section className="about-carousel-section mt-5">
           <div className="section-header text-center">
-            <h2 className="section-title">Últimas Noticias</h2>
-            <p className="section-subtitle">Lo más nuevo y relevante del sector inmobiliario</p>
+            <h2 className="section-title">Conoce Nuestro Espacio</h2>
+            <p className="section-subtitle">Explora nuestras oficinas y entorno de trabajo profesional</p>
           </div>
-          <div className="blog-grid">
-            <article className="blog-card">
-              <div className="blog-img-placeholder" style={{ background: 'linear-gradient(45deg, #10b981, #059669)'}}></div>
-              <div className="blog-content">
-                <span className="blog-date">12 Abr, 2026</span>
-                <h3 className="blog-title">Tendencias del mercado inmobiliario para este año</h3>
-                <p className="blog-excerpt">Descubre cuáles son las zonas con mayor crecimiento y plusvalía en la ciudad para tu próxima gran inversión.</p>
-                <span className="read-more">Leer Más →</span>
-              </div>
-            </article>
+
+          <div className="about-main-carousel">
+            <button className="carousel-nav-btn prev" onClick={prevSlide} aria-label="Anterior">
+              &#10094;
+            </button>
             
-            <article className="blog-card">
-              <div className="blog-img-placeholder" style={{ background: 'linear-gradient(45deg, #f59e0b, #d97706)'}}></div>
-              <div className="blog-content">
-                <span className="blog-date">05 Abr, 2026</span>
-                <h3 className="blog-title">5 consejos antes de comprar tu primera casa</h3>
-                <p className="blog-excerpt">Una guía esencial paso a paso para evitar errores comunes y asegurar tu inversión a largo plazo.</p>
-                <span className="read-more">Leer Más →</span>
-              </div>
-            </article>
-            
-            <article className="blog-card">
-              <div className="blog-img-placeholder" style={{ background: 'linear-gradient(45deg, #4f46e5, #4338ca)'}}></div>
-              <div className="blog-content">
-                <span className="blog-date">28 Mar, 2026</span>
-                <h3 className="blog-title">¿Es buen momento para invertir en bienes raíces?</h3>
-                <p className="blog-excerpt">Un exhaustivo análisis profundo sobre las tasas de interés actuales y sus proyecciones a futuro.</p>
-                <span className="read-more">Leer Más →</span>
-              </div>
-            </article>
+            <div className="carousel-slides-container">
+              {carouselSlides.map((slide, index) => (
+                <div
+                  key={index}
+                  className={`carousel-slide-item ${index === currentIndex ? 'active' : ''} ${slide.contain ? 'contain-mode' : ''}`}
+                >
+                  <img src={slide.src} alt={slide.alt} />
+                  <div className="carousel-slide-overlay">
+                    <span className="carousel-slide-label">{slide.label}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className="carousel-nav-btn next" onClick={nextSlide} aria-label="Siguiente">
+              &#10095;
+            </button>
+
+            <div className="carousel-indicators">
+              {carouselSlides.map((_, index) => (
+                <button
+                  key={index}
+                  className={`carousel-indicator-dot ${index === currentIndex ? 'active' : ''}`}
+                  onClick={() => setCurrentIndex(index)}
+                  aria-label={`Ir a imagen ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </section>
+
       </div>
     </div>
   );
