@@ -123,7 +123,7 @@ const PropiedadDetalle = () => {
       const telefonoWhatsapp = normalizePhoneForWhatsApp(agenteAsignado?.telefono);
       const whatsappMessage = [
         `Hola ${agenteNombre}, ¿como estas?`,
-        `Soy ${payload.nombre} y quiero consultar por la propiedad \"${propiedad.titulo}\" (ID ${propiedad.id}).`,
+        `Soy ${payload.nombre} y quiero consultar por la propiedad "${propiedad.titulo}" (ID ${propiedad.id}).`,
         `Mi telefono: ${payload.telefono || 'No informado'}`,
         `Mi email: ${payload.email || 'No informado'}`,
         '',
@@ -140,7 +140,7 @@ const PropiedadDetalle = () => {
       const emailBody = [
         `Hola ${agenteNombre},`,
         '',
-        `Mi nombre es ${payload.nombre} y quiero consultar por la propiedad \"${propiedad.titulo}\" (ID ${propiedad.id}).`,
+        `Mi nombre es ${payload.nombre} y quiero consultar por la propiedad "${propiedad.titulo}" (ID ${propiedad.id}).`,
         `Telefono: ${payload.telefono || 'No informado'}`,
         `Email: ${payload.email || 'No informado'}`,
         '',
