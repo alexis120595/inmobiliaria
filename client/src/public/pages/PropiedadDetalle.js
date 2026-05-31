@@ -21,6 +21,16 @@ const detailMarkerIcon = new L.DivIcon({
   popupAnchor: [0, -48],
 });
 
+const normalizePhoneForWhatsApp = (phoneRaw) => {
+  const digits = String(phoneRaw || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('549')) return digits;
+  if (digits.startsWith('54')) return `549${digits.slice(2)}`;
+  if (digits.startsWith('0')) return `549${digits.slice(1)}`;
+  if (digits.length === 10) return `549${digits}`;
+  return digits;
+};
+
 const PropiedadDetalle = () => {
   const { id } = useParams();
   const [propiedad, setPropiedad] = useState(null);
@@ -36,6 +46,7 @@ const PropiedadDetalle = () => {
   const [contactLoading, setContactLoading] = useState(false);
   const [contactSuccess, setContactSuccess] = useState('');
   const [contactError, setContactError] = useState('');
+  const [contactChannels, setContactChannels] = useState(null);
 
   useEffect(() => {
     const fetchPropiedad = async () => {
@@ -70,6 +81,7 @@ const PropiedadDetalle = () => {
   }
 
   const direccionCompleta = [propiedad.localidad, propiedad.provincia, propiedad.pais].filter(Boolean).join(', ');
+  const agenteAsignado = propiedad.Usuario || null;
   const currentImgs = propiedad.imagenes || [];
   const mainImage = selectedImageUrl || (currentImgs.length > 0 ? currentImgs[0].url : '');
   const smallImages = currentImgs.filter(img => img.url !== mainImage).slice(0, 4);
@@ -84,6 +96,7 @@ const PropiedadDetalle = () => {
     setContactLoading(true);
     setContactSuccess('');
     setContactError('');
+    setContactChannels(null);
 
     const rolTexto = contactForm.rol ? `\n\nRol del contacto: ${contactForm.rol}` : '';
     const payload = {
@@ -106,7 +119,47 @@ const PropiedadDetalle = () => {
         throw new Error(data.error || 'No se pudo enviar la consulta de la propiedad.');
       }
 
+      const agenteNombre = agenteAsignado?.nombre || 'agente';
+      const telefonoWhatsapp = normalizePhoneForWhatsApp(agenteAsignado?.telefono);
+      const whatsappMessage = [
+        `Hola ${agenteNombre}, ¿como estas?`,
+        `Soy ${payload.nombre} y quiero consultar por la propiedad \"${propiedad.titulo}\" (ID ${propiedad.id}).`,
+        `Mi telefono: ${payload.telefono || 'No informado'}`,
+        `Mi email: ${payload.email || 'No informado'}`,
+        '',
+        `Mensaje: ${payload.mensaje}`,
+        '',
+        `Link de referencia: ${window.location.href}`
+      ].join('\n');
+
+      const whatsappUrl = telefonoWhatsapp
+        ? `https://wa.me/${telefonoWhatsapp}?text=${encodeURIComponent(whatsappMessage)}`
+        : '';
+
+      const emailSubject = `Consulta por propiedad: ${propiedad.titulo} (ID ${propiedad.id})`;
+      const emailBody = [
+        `Hola ${agenteNombre},`,
+        '',
+        `Mi nombre es ${payload.nombre} y quiero consultar por la propiedad \"${propiedad.titulo}\" (ID ${propiedad.id}).`,
+        `Telefono: ${payload.telefono || 'No informado'}`,
+        `Email: ${payload.email || 'No informado'}`,
+        '',
+        `Mensaje:`,
+        payload.mensaje,
+        '',
+        `Link de referencia: ${window.location.href}`
+      ].join('\n');
+
+      const emailUrl = agenteAsignado?.email
+        ? `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(agenteAsignado.email)}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`
+        : '';
+
       setContactSuccess('Mensaje enviado correctamente. Te responderemos pronto.');
+      setContactChannels({
+        whatsappUrl,
+        emailUrl,
+        agenteNombre
+      });
       setContactForm({
         nombre: '',
         telefono: '',
@@ -341,7 +394,13 @@ const PropiedadDetalle = () => {
                    {(!propiedad.Usuario || !propiedad.Usuario.foto_url) && <span style={{ fontSize: '1.5rem', color: '#94a3b8' }}>👤</span>}
                 </div>
                 <div>
-                  <h4 style={{ margin: '0 0 5px 0', fontSize: '1.05rem', color: '#1e293b' }}>{propiedad.Usuario ? propiedad.Usuario.nombre : 'Agente Autorizado'}</h4>
+                  <h4 style={{ margin: '0 0 5px 0', fontSize: '1.05rem', color: '#1e293b' }}>{agenteAsignado ? agenteAsignado.nombre : 'Agente Autorizado'}</h4>
+                  {agenteAsignado?.telefono && (
+                    <p style={{ margin: '0 0 5px 0', fontSize: '0.82rem', color: '#64748b' }}>WhatsApp: {agenteAsignado.telefono}</p>
+                  )}
+                  {agenteAsignado?.email && (
+                    <p style={{ margin: '0 0 5px 0', fontSize: '0.82rem', color: '#64748b' }}>Email: {agenteAsignado.email}</p>
+                  )}
                   <Link to="/propiedades" style={{ color: '#dc2626', fontSize: '0.85rem', textDecoration: 'none', fontWeight: 600 }}>Ver anuncios</Link>
                 </div>
               </div>
@@ -413,6 +472,52 @@ const PropiedadDetalle = () => {
                 >
                   {contactLoading ? 'Enviando...' : 'Enviar mensaje'}
                 </button>
+
+                {contactChannels && (contactChannels.whatsappUrl || contactChannels.emailUrl) && (
+                  <div style={{ marginTop: '8px', display: 'grid', gap: '10px' }}>
+                    <p style={{ margin: 0, fontSize: '0.83rem', color: '#475569' }}>
+                      Elegí cómo contactar a {contactChannels.agenteNombre}:
+                    </p>
+
+                    {contactChannels.whatsappUrl && (
+                      <a
+                        href={contactChannels.whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          textDecoration: 'none',
+                          textAlign: 'center',
+                          padding: '12px',
+                          borderRadius: '4px',
+                          fontWeight: 700,
+                          backgroundColor: '#25d366',
+                          color: '#ffffff'
+                        }}
+                      >
+                        Contactar por WhatsApp
+                      </a>
+                    )}
+
+                    {contactChannels.emailUrl && (
+                      <a
+                        href={contactChannels.emailUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          textDecoration: 'none',
+                          textAlign: 'center',
+                          padding: '12px',
+                          borderRadius: '4px',
+                          fontWeight: 700,
+                          backgroundColor: '#1d4ed8',
+                          color: '#ffffff'
+                        }}
+                      >
+                        Contactar por Email
+                      </a>
+                    )}
+                  </div>
+                )}
               </form>
             </div>
           </div>

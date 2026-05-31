@@ -128,7 +128,7 @@ const Agentes = () => {
             <div className="grid grid-cols-2">
               <input className="form-control" name="nombre" value={form.nombre} onChange={handleChange} placeholder="Nombre" required />
               <input className="form-control" name="email" value={form.email} onChange={handleChange} placeholder="Email" type="email" required />
-              <input className="form-control" name="telefono" value={form.telefono} onChange={handleChange} placeholder="Teléfono" />
+              <input className="form-control" name="telefono" value={form.telefono} onChange={handleChange} placeholder="Teléfono" required />
               <input className="form-control" name="foto_url" value={form.foto_url} onChange={handleChange} placeholder="O Foto URL (opcional)" required={!file && !editId} />
               <input className="form-control" name="foto" type="file" accept="image/*" onChange={handleFileChange} style={{ gridColumn: 'span 2' }} />
               <input className="form-control" name="password_hash" value={form.password_hash} onChange={handleChange} placeholder="Contraseña (hash)" type="password" required={!editId} style={{ gridColumn: 'span 2' }} />
