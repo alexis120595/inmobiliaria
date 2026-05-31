@@ -3,17 +3,11 @@ import React, { useState, useEffect } from 'react';
 const carouselSlides = [
   { src: '/assets/about_recepcion.jpg', alt: 'Recepción Mariana Fernández Inmobiliaria', label: 'Nuestra Recepción', contain: false },
   { src: '/assets/about_oficina.jpg', alt: 'Atención Personalizada', label: 'Atención Personalizada', contain: false },
-  { src: '/assets/about_cartel.jpg', alt: 'Matrícula Profesional', label: 'Matrícula Profesional — MAT 1488', contain: true },
-  { src: '/assets/about_fachada.jpg', alt: 'Fachada Mariana Fernández Servicio Inmobiliario', label: 'Nuestra Oficina', contain: false },
+  { src: '/assets/luxury_villa_hero.png', alt: 'Frente de propiedad destacada', label: 'Nuestra Oficina', contain: false },
 ];
 
 const SobreNosotros = () => {
-  const [openSection, setOpenSection] = useState('hoy');
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  const toggleSection = (section) => {
-    setOpenSection(openSection === section ? null : section);
-  };
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % carouselSlides.length);
@@ -31,7 +25,8 @@ const SobreNosotros = () => {
   return (
     <div className="about-page">
       {/* About Hero Section */}
-      <section className="about-hero" style={{ backgroundImage: "url('/assets/about_team_hero.png')" }}>
+      <section className="about-hero about-hero-nosotros">
+        <img className="about-hero-nosotros-image" src="/assets/about_fachada.jpg" alt="Frente del edificio de la inmobiliaria" />
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <h1 className="hero-title">Nuestra Historia y Equipo</h1>
@@ -41,40 +36,37 @@ const SobreNosotros = () => {
 
       <div className="page-container pt-0">
         
-        {/* Accordions Section */}
+        {/* Company Information Section */}
         <div className="about-accordions">
-          <div className={`accordion-item ${openSection === 'hoy' ? 'active' : ''}`}>
-            <div className="accordion-header" onClick={() => toggleSection('hoy')}>
+          <div className="accordion-item active">
+            <div className="accordion-header">
               <h3>Nuestra Empresa Hoy</h3>
-              <span className="accordion-icon">{openSection === 'hoy' ? '−' : '+'}</span>
             </div>
-            <div className="accordion-body" style={{ display: openSection === 'hoy' ? 'block' : 'none' }}>
+            <div className="accordion-body" style={{ display: 'block' }}>
               <p>
                 Somos una de las agencias inmobiliarias líderes con más de una década de experiencia conectando a las personas con su hogar ideal. Hoy en día, operamos con un equipo diverso de agentes, consultores y expertos en el mercado de bienes raíces que trabajan de la mano con tecnología de vanguardia para brindar resultados excepcionales.
               </p>
             </div>
           </div>
 
-          <div className={`accordion-item ${openSection === 'objetivo' ? 'active' : ''}`}>
-            <div className="accordion-header" onClick={() => toggleSection('objetivo')}>
+          <div className="accordion-item active">
+            <div className="accordion-header">
               <h3>Nuestro Objetivo</h3>
-              <span className="accordion-icon">{openSection === 'objetivo' ? '−' : '+'}</span>
             </div>
-            <div className="accordion-body" style={{ display: openSection === 'objetivo' ? 'block' : 'none' }}>
+            <div className="accordion-body" style={{ display: 'block' }}>
               <p>
                 Nuestra meta es transformar el modelo tradicional de bienes raíces, enfocándonos en un enfoque basado 100% en la transparencia y centrado enteramente en las necesidades reales y los sueños de cada uno de nuestros clientes, garantizando siempre la máxima seguridad y confort en cada operación.
               </p>
             </div>
           </div>
 
-          <div className={`accordion-item ${openSection === 'origen' ? 'active' : ''}`}>
-            <div className="accordion-header" onClick={() => toggleSection('origen')}>
+          <div className="accordion-item active">
+            <div className="accordion-header">
               <h3>Origen</h3>
-              <span className="accordion-icon">{openSection === 'origen' ? '−' : '+'}</span>
             </div>
-            <div className="accordion-body" style={{ display: openSection === 'origen' ? 'block' : 'none' }}>
+            <div className="accordion-body" style={{ display: 'block' }}>
               <p>
-                Inmobiliaria Premium nació del sueño y visión de un pequeño grupo de agentes locales apasionados por el buen servicio. Desde una modesta oficina inicial, fuimos creciendo sostenidamente gracias a las continuas recomendaciones de clientes satisfechos que valoraron nuestra atención familiar y profesional a la vez.
+                Mariana Fernandez Servicio Inmobiliario nació del sueño y visión de un pequeño grupo de agentes locales apasionados por el buen servicio. Desde una modesta oficina inicial, fuimos creciendo sostenidamente gracias a las continuas recomendaciones de clientes satisfechos que valoraron nuestra atención familiar y profesional a la vez.
               </p>
             </div>
           </div>

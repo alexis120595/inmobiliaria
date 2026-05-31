@@ -5,6 +5,7 @@ import { useAuth } from '../../admin/context/AuthContext';
 const Navbar = () => {
   const { usuario, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const logoSrc = `${process.env.PUBLIC_URL}/assets/logo editado.png`;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -23,7 +24,11 @@ const Navbar = () => {
     <header className="public-navbar">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          Inmobiliaria<span>Premium</span>
+          <img
+            className="brand-logo brand-logo-navbar"
+            src={logoSrc}
+            alt="Mariana Fernandez Servicio Inmobiliario"
+          />
         </Link>
         
         {/* Botón de hamburguesa para móvil */}

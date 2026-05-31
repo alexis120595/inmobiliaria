@@ -2,6 +2,37 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import API_URL from '../../config';
 import MapaPropiedades from '../components/MapaPropiedades';
+import { DEPARTAMENTOS_MENDOZA } from '../data/departamentosMendoza';
+import DepartamentoSelect from '../components/DepartamentoSelect';
+
+const normalizeText = (value) =>
+  (value || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
+const esDepartamentoValido = (ubicacion) =>
+  DEPARTAMENTOS_MENDOZA.some((depto) => normalizeText(depto) === normalizeText(ubicacion));
+
+const OPCIONES_OPERACION = [
+  { value: 'venta', label: 'Venta' },
+  { value: 'alquiler', label: 'Alquiler' }
+];
+
+const OPCIONES_TIPO = [
+  { value: 'casa', label: 'Casa' },
+  { value: 'departamento', label: 'Departamento' },
+  { value: 'terreno', label: 'Terreno' }
+];
+
+const OPCIONES_DORMITORIOS = [
+  { value: '1', label: '1 o más' },
+  { value: '2', label: '2 o más' },
+  { value: '3', label: '3 o más' },
+  { value: '4', label: '4 o más' }
+];
 
 const Propiedades = () => {
   const [propiedades, setPropiedades] = useState([]);
@@ -14,7 +45,8 @@ const Propiedades = () => {
   const searchParams = new URLSearchParams(location.search);
   const urlTipo = searchParams.get('tipo') || '';
   const urlOperacion = searchParams.get('operacion') || '';
-  const urlUbicacion = searchParams.get('ubicacion') || '';
+  const rawUrlUbicacion = searchParams.get('ubicacion') || '';
+  const urlUbicacion = esDepartamentoValido(rawUrlUbicacion) ? rawUrlUbicacion : '';
   const urlDormitorios = searchParams.get('dormitorios') || '';
 
   // Estado local de los campos del formulario (se sincroniza con la URL)
@@ -61,11 +93,12 @@ const Propiedades = () => {
         return false;
       }
 
-      // Filtro por ubicación (busca en dirección, localidad, provincia, país y título)
+      // Filtro por departamento (coincidencia exacta en localidad o provincia)
       if (urlUbicacion) {
-        const termino = urlUbicacion.toLowerCase();
-        const campos = [p.direccion, p.localidad, p.provincia, p.pais, p.titulo].filter(Boolean);
-        const coincide = campos.some(campo => campo.toLowerCase().includes(termino));
+        const objetivo = normalizeText(urlUbicacion);
+        const localidad = normalizeText(p.localidad);
+        const provincia = normalizeText(p.provincia);
+        const coincide = localidad === objetivo || provincia === objetivo;
         if (!coincide) return false;
       }
 
@@ -123,46 +156,47 @@ const Propiedades = () => {
       <div className="properties-search-section">
         <form className="catalog-search-form" onSubmit={aplicarFiltros}>
           <div className="search-field">
-            <label>Ubicación / Palabra clave</label>
+            <label>Departamento</label>
             <div className="input-with-icon">
               <span className="icon">📍</span>
-              <input
-                type="text"
-                placeholder="¿Dónde buscas?"
+              <DepartamentoSelect
+                className="with-left-icon"
                 value={filtroUbicacion}
-                onChange={(e) => setFiltroUbicacion(e.target.value)}
+                onChange={setFiltroUbicacion}
+                options={DEPARTAMENTOS_MENDOZA}
+                emptyLabel="Todas las zonas"
               />
             </div>
           </div>
           
           <div className="search-field">
             <label>Operación</label>
-            <select value={filtroOperacion} onChange={(e) => setFiltroOperacion(e.target.value)}>
-              <option value="">Todas</option>
-              <option value="venta">Venta</option>
-              <option value="alquiler">Alquiler</option>
-            </select>
+            <DepartamentoSelect
+              value={filtroOperacion}
+              onChange={setFiltroOperacion}
+              options={OPCIONES_OPERACION}
+              emptyLabel="Todas"
+            />
           </div>
 
           <div className="search-field">
             <label>Tipo Inmueble</label>
-            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
-              <option value="">Cualquiera</option>
-              <option value="casa">Casa</option>
-              <option value="departamento">Departamento</option>
-              <option value="terreno">Terreno</option>
-            </select>
+            <DepartamentoSelect
+              value={filtroTipo}
+              onChange={setFiltroTipo}
+              options={OPCIONES_TIPO}
+              emptyLabel="Cualquiera"
+            />
           </div>
           
           <div className="search-field">
             <label>Hab.</label>
-            <select value={filtroDormitorios} onChange={(e) => setFiltroDormitorios(e.target.value)}>
-              <option value="">Todas</option>
-              <option value="1">1 o más</option>
-              <option value="2">2 o más</option>
-              <option value="3">3 o más</option>
-              <option value="4">4 o más</option>
-            </select>
+            <DepartamentoSelect
+              value={filtroDormitorios}
+              onChange={setFiltroDormitorios}
+              options={OPCIONES_DORMITORIOS}
+              emptyLabel="Todas"
+            />
           </div>
 
           <button type="submit" className="btn-primary search-action-btn">

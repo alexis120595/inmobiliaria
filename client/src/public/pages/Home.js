@@ -1,12 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { DEPARTAMENTOS_MENDOZA } from '../data/departamentosMendoza';
+import DepartamentoSelect from '../components/DepartamentoSelect';
+
+const OPCIONES_TIPO = [
+  { value: 'casa', label: 'Casa' },
+  { value: 'departamento', label: 'Departamento' },
+  { value: 'terreno', label: 'Terreno' }
+];
+
+const OPCIONES_OPERACION = [
+  { value: 'venta', label: 'Comprar' },
+  { value: 'alquiler', label: 'Alquilar' }
+];
+
+const HERO_SLIDES = [
+    { src: '/assets/mendoza_propiedad_1.jpg', alt: 'Frente de casa premium en Mendoza' },
+    { src: '/assets/mendoza_propiedad_2.jpg', alt: 'Jardin y piscina de propiedad en Mendoza' }
+];
 
 const Home = () => {
   const navigate = useNavigate();
+  const [heroIndex, setHeroIndex] = useState(0);
   const [ubicacion, setUbicacion] = useState('');
   const [tipo, setTipo] = useState('');
   const [operacion, setOperacion] = useState('');
   const [selectedFlyer, setSelectedFlyer] = useState(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -21,7 +48,7 @@ const Home = () => {
   return (
     <div className="home-page">
       {/* Hero Section Full Width */}
-      <section className="hero-section" style={{ backgroundImage: "url('/assets/luxury_villa_hero.png')" }}>
+      <section className="hero-section" style={{ backgroundImage: `url('${HERO_SLIDES[heroIndex].src}')` }}>
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <h1 className="hero-title">Encuentra el hogar de tus sueños</h1>
@@ -33,36 +60,48 @@ const Home = () => {
             <Link to="/contacto" className="btn btn-primary hero-cta-btn">Quiero Consultar</Link>
           </div>
         </div>
+        <div className="hero-dots" aria-label="Imagenes del banner">
+          {HERO_SLIDES.map((slide, index) => (
+            <button
+              key={slide.src}
+              type="button"
+              className={`hero-dot ${index === heroIndex ? 'active' : ''}`}
+              onClick={() => setHeroIndex(index)}
+              aria-label={`Ver imagen ${index + 1}`}
+            />
+          ))}
+        </div>
       </section>
 
       {/* Buscador de Propiedades Superpuesto */}
       <div className="home-search-container">
         <form className="home-search-form" onSubmit={handleSearch}>
           <div className="search-field">
-            <label>Ubicación</label>
-            <input
-              type="text"
-              placeholder="Ej. Ciudad, Zona..."
+            <label>Departamento</label>
+            <DepartamentoSelect
               value={ubicacion}
-              onChange={(e) => setUbicacion(e.target.value)}
+              onChange={setUbicacion}
+              options={DEPARTAMENTOS_MENDOZA}
+              emptyLabel="Todas las zonas"
             />
           </div>
           <div className="search-field">
             <label>Tipo de Inmueble</label>
-            <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
-              <option value="">Todos los tipos</option>
-              <option value="casa">Casa</option>
-              <option value="departamento">Departamento</option>
-              <option value="terreno">Terreno</option>
-            </select>
+            <DepartamentoSelect
+              value={tipo}
+              onChange={setTipo}
+              options={OPCIONES_TIPO}
+              emptyLabel="Todos los tipos"
+            />
           </div>
           <div className="search-field">
             <label>Operación</label>
-            <select value={operacion} onChange={(e) => setOperacion(e.target.value)}>
-              <option value="">Todas</option>
-              <option value="venta">Comprar</option>
-              <option value="alquiler">Alquilar</option>
-            </select>
+            <DepartamentoSelect
+              value={operacion}
+              onChange={setOperacion}
+              options={OPCIONES_OPERACION}
+              emptyLabel="Todas"
+            />
           </div>
           <button type="submit" className="btn-primary search-btn">Buscar Propiedades</button>
         </form>
@@ -162,7 +201,7 @@ const Home = () => {
       <section className="services-section">
         <div className="services-header text-center">
           <h2 className="services-title">SERVICIOS</h2>
-          <p className="services-subtitle">Desde Inmobiliaria Premium te asesoramos. Accedé y descargá toda la información que necesites</p>
+          <p className="services-subtitle">Desde Mariana Fernandez Servicio Inmobiliario te asesoramos. Accedé y descargá toda la información que necesites</p>
         </div>
         <div className="services-grid">
           <Link to="/contacto?servicio=comprar" className="service-item">

@@ -1,17 +1,25 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
+  const logoSrc = `${process.env.PUBLIC_URL}/assets/logo editado.png`;
+
   return (
     <footer className="public-footer">
       <div className="footer-brand-block">
-        <h3 className="footer-brand-title">INMOBILIARIA</h3>
-        <p className="footer-brand-subtitle">PREMIUM</p>
+        <Link to="/" className="footer-brand-link" aria-label="Volver al inicio">
+          <img
+            className="brand-logo brand-logo-footer"
+            src={logoSrc}
+            alt="Mariana Fernandez Servicio Inmobiliario"
+          />
+        </Link>
       </div>
 
       <div className="footer-container">
         <div className="footer-contact-card">
           <div className="footer-contact-icon" aria-hidden="true">📍</div>
-          <p className="footer-contact-text">Av. Aguinaga 1338, Chacras de Coria, Luján de Cuyo, Mendoza, Argentina.</p>
+          <p className="footer-contact-text">Av San Martin 596, Luján de Cuyo, Mendoza.</p>
         </div>
 
         <div className="footer-contact-card">
@@ -26,12 +34,12 @@ const Footer = () => {
 
         <div className="footer-contact-card">
           <div className="footer-contact-icon" aria-hidden="true">◔</div>
-          <p className="footer-contact-text">261 5369447 / 4962711</p>
+          <p className="footer-contact-text">2613381678 / 2614673852</p>
         </div>
 
         <div className="footer-contact-card">
           <div className="footer-contact-icon" aria-hidden="true">✉</div>
-          <p className="footer-contact-text">info@inmobiliariapremium.com</p>
+          <p className="footer-contact-text">fernandezinmobiliaria.mza@gmail.com</p>
         </div>
       </div>
     </footer>

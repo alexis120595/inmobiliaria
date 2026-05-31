@@ -26,6 +26,16 @@ const PropiedadDetalle = () => {
   const [propiedad, setPropiedad] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
+  const [contactForm, setContactForm] = useState({
+    nombre: '',
+    telefono: '',
+    email: '',
+    mensaje: '',
+    rol: ''
+  });
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState('');
+  const [contactError, setContactError] = useState('');
 
   useEffect(() => {
     const fetchPropiedad = async () => {
@@ -63,6 +73,53 @@ const PropiedadDetalle = () => {
   const currentImgs = propiedad.imagenes || [];
   const mainImage = selectedImageUrl || (currentImgs.length > 0 ? currentImgs[0].url : '');
   const smallImages = currentImgs.filter(img => img.url !== mainImage).slice(0, 4);
+
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setContactForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactLoading(true);
+    setContactSuccess('');
+    setContactError('');
+
+    const rolTexto = contactForm.rol ? `\n\nRol del contacto: ${contactForm.rol}` : '';
+    const payload = {
+      nombre: contactForm.nombre.trim(),
+      telefono: contactForm.telefono.trim(),
+      email: contactForm.email.trim(),
+      propiedad_id: propiedad.id,
+      mensaje: `${contactForm.mensaje.trim() || `Hola, me interesa agendar una visita para la propiedad con ID ${propiedad.id}`}${rolTexto}`
+    };
+
+    try {
+      const res = await fetch(`${API_URL}/api/contactos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo enviar la consulta de la propiedad.');
+      }
+
+      setContactSuccess('Mensaje enviado correctamente. Te responderemos pronto.');
+      setContactForm({
+        nombre: '',
+        telefono: '',
+        email: '',
+        mensaje: '',
+        rol: ''
+      });
+    } catch (error) {
+      setContactError(error.message || 'Ocurrió un error al enviar la consulta.');
+    } finally {
+      setContactLoading(false);
+    }
+  };
 
   return (
     <div style={{ backgroundColor: '#f8fafc', paddingBottom: '60px', fontFamily: 'Inter, sans-serif' }}>
@@ -289,24 +346,72 @@ const PropiedadDetalle = () => {
                 </div>
               </div>
 
-              <form style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <input type="text" placeholder="Nombre" style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }} required />
-                <input type="tel" placeholder="Teléfono" style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }} required />
-                <input type="email" placeholder="Correo" style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }} required />
-                <textarea placeholder="Mensaje..." rows="4" style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', resize: 'none', outline: 'none' }} defaultValue={`Hola, me interesa agendar una visita para la propiedad con ID ${propiedad.id}`}></textarea>
+              <form style={{ display: 'flex', flexDirection: 'column', gap: '15px' }} onSubmit={handleContactSubmit}>
+                <input
+                  type="text"
+                  name="nombre"
+                  placeholder="Nombre"
+                  style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+                  value={contactForm.nombre}
+                  onChange={handleContactChange}
+                  required
+                />
+                <input
+                  type="tel"
+                  name="telefono"
+                  placeholder="Teléfono"
+                  style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+                  value={contactForm.telefono}
+                  onChange={handleContactChange}
+                  required
+                />
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Correo"
+                  style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', outline: 'none' }}
+                  value={contactForm.email}
+                  onChange={handleContactChange}
+                  required
+                />
+                <textarea
+                  placeholder={`Hola, me interesa agendar una visita para la propiedad con ID ${propiedad.id}`}
+                  rows="4"
+                  name="mensaje"
+                  style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', resize: 'none', outline: 'none' }}
+                  value={contactForm.mensaje}
+                  onChange={handleContactChange}
+                ></textarea>
                 
-                <select style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', backgroundColor: '#fff', color: '#64748b', outline: 'none' }}>
+                <select
+                  style={{ padding: '12px 15px', borderRadius: '4px', border: '1px solid #cbd5e1', fontSize: '0.9rem', backgroundColor: '#fff', color: '#64748b', outline: 'none' }}
+                  name="rol"
+                  value={contactForm.rol}
+                  onChange={handleContactChange}
+                >
                   <option value="">Soy un(a)...</option>
                   <option value="comprador">Comprador interesado</option>
                   <option value="colega">Colega Inmobiliario</option>
                 </select>
 
+                {contactSuccess && (
+                  <p style={{ fontSize: '0.85rem', color: '#15803d', margin: '0' }}>{contactSuccess}</p>
+                )}
+                {contactError && (
+                  <p style={{ fontSize: '0.85rem', color: '#b91c1c', margin: '0' }}>{contactError}</p>
+                )}
+
                 <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '5px 0', lineHeight: 1.4 }}>
                   Al enviar el formulario, estoy de acuerdo con los <Link to="/sobre-nosotros" style={{ color: '#dc2626', textDecoration: 'none' }}>Términos de uso</Link>.
                 </p>
 
-                <button type="button" className="btn-primary" style={{ padding: '14px', borderRadius: '4px', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '1rem', marginTop: '5px', width: '100%', boxSizing: 'border-box' }}>
-                  Enviar mensaje
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  style={{ padding: '14px', borderRadius: '4px', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: '1rem', marginTop: '5px', width: '100%', boxSizing: 'border-box' }}
+                  disabled={contactLoading}
+                >
+                  {contactLoading ? 'Enviando...' : 'Enviar mensaje'}
                 </button>
               </form>
             </div>

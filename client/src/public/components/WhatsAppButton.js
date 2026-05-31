@@ -2,9 +2,8 @@ import React from 'react';
 import './WhatsAppButton.css';
 
 const WhatsAppButton = () => {
-  // Número de la empresa. Reemplaza con el número real de la inmobiliaria
-  const phoneNumber = "5491100000000"; 
-  const message = "Hola! Estoy interesado en obtener más información.";
+  const phoneNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '5492613381678';
+  const message = 'Hola! Quiero hacer una consulta sobre una propiedad.';
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
 
   return (

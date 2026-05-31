@@ -22,6 +22,20 @@ exports.getById = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const contacto = await Contacto.create(req.body);
+    
+    // Intentar enviar el email de notificación en segundo plano
+    let propiedad = null;
+    if (req.body.propiedad_id) {
+      try {
+        propiedad = await Propiedad.findByPk(req.body.propiedad_id);
+      } catch (dbErr) {
+        console.error('Error al buscar la propiedad asociada para enviar el email:', dbErr);
+      }
+    }
+
+    const { sendContactEmail } = require('../services/emailService');
+    sendContactEmail(contacto.toJSON ? contacto.toJSON() : contacto, propiedad ? (propiedad.toJSON ? propiedad.toJSON() : propiedad) : null);
+
     res.status(201).json(contacto);
   } catch (err) {
     res.status(400).json({ error: err.message });
