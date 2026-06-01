@@ -48,6 +48,21 @@ exports.create = async (req, res) => {
       imagenes = [...imagenes, ...uploadedUrls];
     }
 
+    // Sanitizar campos numéricos para evitar errores de casteo en PostgreSQL
+    const numericFields = [
+      'precio', 'superficie_cubierta', 'superficie_total',
+      'dormitorios', 'banos', 'ambientes', 'plantas',
+      'garaje', 'antiguedad', 'agente_id', 'latitud', 'longitud'
+    ];
+    for (const field of numericFields) {
+      if (propiedadData[field] === '') {
+        propiedadData[field] = null;
+      } else if (propiedadData[field] !== undefined && propiedadData[field] !== null) {
+        const val = Number(propiedadData[field]);
+        propiedadData[field] = isNaN(val) ? null : val;
+      }
+    }
+
     // Auto-geocodificar la dirección si no se proporcionaron coordenadas
     if (!propiedadData.latitud || !propiedadData.longitud) {
       const coords = await geocodeAddress(
@@ -87,6 +102,7 @@ exports.create = async (req, res) => {
 
     res.status(201).json(propiedadCreada);
   } catch (err) {
+    console.error('Error al crear propiedad:', err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -104,6 +120,21 @@ exports.update = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const uploadedUrls = req.files.map(file => file.path);
       imagenes = [...imagenes, ...uploadedUrls];
+    }
+
+    // Sanitizar campos numéricos para evitar errores de casteo en PostgreSQL
+    const numericFields = [
+      'precio', 'superficie_cubierta', 'superficie_total',
+      'dormitorios', 'banos', 'ambientes', 'plantas',
+      'garaje', 'antiguedad', 'agente_id', 'latitud', 'longitud'
+    ];
+    for (const field of numericFields) {
+      if (propiedadData[field] === '') {
+        propiedadData[field] = null;
+      } else if (propiedadData[field] !== undefined && propiedadData[field] !== null) {
+        const val = Number(propiedadData[field]);
+        propiedadData[field] = isNaN(val) ? null : val;
+      }
     }
 
     const propiedad = await Propiedad.findByPk(req.params.id);
@@ -157,6 +188,7 @@ exports.update = async (req, res) => {
 
     res.json(propiedadActualizada);
   } catch (err) {
+    console.error('Error al actualizar propiedad:', err);
     res.status(400).json({ error: err.message });
   }
 };

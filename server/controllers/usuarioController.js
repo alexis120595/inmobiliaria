@@ -64,6 +64,7 @@ exports.create = async (req, res) => {
     const usuario = await Usuario.create(bodyData);
     res.status(201).json(usuario);
   } catch (err) {
+    console.error('Error al crear usuario/agente:', err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -105,6 +106,7 @@ exports.update = async (req, res) => {
     await usuario.update(bodyData);
     res.json(usuario);
   } catch (err) {
+    console.error('Error al actualizar usuario/agente:', err);
     res.status(400).json({ error: err.message });
   }
 };
