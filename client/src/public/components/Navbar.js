@@ -32,10 +32,15 @@ const Navbar = () => {
         </Link>
         
         {/* Botón de hamburguesa para móvil */}
-        <button className="hamburger-btn" onClick={toggleMenu} aria-label="Abrir menú">
-          <span className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></span>
-          <span className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></span>
-          <span className={`hamburger-line ${isMenuOpen ? 'open' : ''}`}></span>
+        <button
+          className={`hamburger-btn ${isMenuOpen ? 'open' : ''}`}
+          onClick={toggleMenu}
+          aria-label={isMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={isMenuOpen}
+        >
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
+          <span className="hamburger-line"></span>
         </button>
 
         {/* Enlaces de navegación */}

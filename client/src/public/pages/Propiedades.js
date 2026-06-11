@@ -4,6 +4,7 @@ import API_URL from '../../config';
 import MapaPropiedades from '../components/MapaPropiedades';
 import { DEPARTAMENTOS_MENDOZA } from '../data/departamentosMendoza';
 import DepartamentoSelect from '../components/DepartamentoSelect';
+import { PROPERTY_TYPE_OPTIONS, getPropertyTypeLabel, propertyTypesMatch } from '../../shared/propertyTypes';
 
 const normalizeText = (value) =>
   (value || '')
@@ -19,12 +20,6 @@ const esDepartamentoValido = (ubicacion) =>
 const OPCIONES_OPERACION = [
   { value: 'venta', label: 'Venta' },
   { value: 'alquiler', label: 'Alquiler' }
-];
-
-const OPCIONES_TIPO = [
-  { value: 'casa', label: 'Casa' },
-  { value: 'departamento', label: 'Departamento' },
-  { value: 'terreno', label: 'Terreno' }
 ];
 
 const OPCIONES_DORMITORIOS = [
@@ -84,7 +79,7 @@ const Propiedades = () => {
   const propiedadesFiltradas = useMemo(() => {
     return propiedades.filter(p => {
       // Filtro por tipo de propiedad
-      if (urlTipo && (!p.tipo_propiedad || p.tipo_propiedad.toLowerCase() !== urlTipo.toLowerCase())) {
+      if (urlTipo && !propertyTypesMatch(p.tipo_propiedad, urlTipo)) {
         return false;
       }
 
@@ -184,7 +179,7 @@ const Propiedades = () => {
             <DepartamentoSelect
               value={filtroTipo}
               onChange={setFiltroTipo}
-              options={OPCIONES_TIPO}
+              options={PROPERTY_TYPE_OPTIONS}
               emptyLabel="Cualquiera"
             />
           </div>
@@ -228,7 +223,7 @@ const Propiedades = () => {
             )}
             {urlTipo && (
               <span style={{ padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, background: '#fef3c7', color: '#92400e', textTransform: 'capitalize' }}>
-                🏠 {urlTipo}
+                🏠 {getPropertyTypeLabel(urlTipo)}
               </span>
             )}
             {urlOperacion && (

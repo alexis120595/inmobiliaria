@@ -2,12 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DEPARTAMENTOS_MENDOZA } from '../data/departamentosMendoza';
 import DepartamentoSelect from '../components/DepartamentoSelect';
-
-const OPCIONES_TIPO = [
-  { value: 'casa', label: 'Casa' },
-  { value: 'departamento', label: 'Departamento' },
-  { value: 'terreno', label: 'Terreno' }
-];
+import { PROPERTY_TYPE_OPTIONS } from '../../shared/propertyTypes';
 
 const OPCIONES_OPERACION = [
   { value: 'venta', label: 'Comprar' },
@@ -90,7 +85,7 @@ const Home = () => {
             <DepartamentoSelect
               value={tipo}
               onChange={setTipo}
-              options={OPCIONES_TIPO}
+              options={PROPERTY_TYPE_OPTIONS}
               emptyLabel="Todos los tipos"
             />
           </div>

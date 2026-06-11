@@ -1,6 +1,7 @@
 import API_URL from '../../config';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { PROPERTY_TYPE_OPTIONS, getCanonicalPropertyType } from '../../shared/propertyTypes';
 
 const API = `${API_URL}/api`;
 
@@ -77,7 +78,11 @@ const Propiedades = () => {
   }, [previews]);
 
   const handleChange = e => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({
+      ...form,
+      [name]: name === 'tipo_propiedad' ? getCanonicalPropertyType(value) : value
+    });
   };
 
   const handleFileChange = e => {
@@ -169,7 +174,7 @@ const Propiedades = () => {
     setForm({
       titulo: prop.titulo || '',
       descripcion: prop.descripcion || '',
-      tipo_propiedad: prop.tipo_propiedad || '',
+      tipo_propiedad: getCanonicalPropertyType(prop.tipo_propiedad),
       operacion: prop.operacion || '',
       direccion: prop.direccion || '',
       localidad: prop.localidad || '',
@@ -251,7 +256,12 @@ const Propiedades = () => {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-2">
               <input className="form-control" name="titulo" value={form.titulo} onChange={handleChange} placeholder="Título" required />
-              <input className="form-control" name="tipo_propiedad" value={form.tipo_propiedad} onChange={handleChange} placeholder="Tipo (ej: Casa, Depto)" required />
+              <select className="form-control" name="tipo_propiedad" value={form.tipo_propiedad} onChange={handleChange} required>
+                <option value="">Seleccionar tipo</option>
+                {PROPERTY_TYPE_OPTIONS.map((tipo) => (
+                  <option key={tipo.value} value={tipo.value}>{tipo.label}</option>
+                ))}
+              </select>
               <input className="form-control" name="operacion" value={form.operacion} onChange={handleChange} placeholder="Operación" required />
               <input className="form-control" name="direccion" value={form.direccion} onChange={handleChange} placeholder="Dirección" />
 
