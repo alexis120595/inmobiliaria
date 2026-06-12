@@ -10,11 +10,11 @@ const OPCIONES_OPERACION = [
 ];
 
 const HERO_SLIDES = [
-  { src: '/assets/home_banner_1.jpeg', alt: 'Fachada de la inmobiliaria', position: 'center', size: 'cover' },
-  { src: '/assets/home_banner_2.jpeg', alt: 'Recepcion de la inmobiliaria', position: 'center top', size: 'contain' },
-  { src: '/assets/home_banner_3.jpeg', alt: 'Mostrador de atencion', position: 'center', size: 'cover' },
-  { src: '/assets/home_banner_4.jpeg', alt: 'Oficina de trabajo', position: 'center', size: 'cover' },
-  { src: '/assets/home_banner_5.jpeg', alt: 'Espacio interior de atencion', position: 'center', size: 'cover' }
+  { src: '/assets/home_banner_1.jpeg', alt: 'Fachada de la inmobiliaria', position: 'center top' },
+  { src: '/assets/home_banner_2.jpeg', alt: 'Recepcion de la inmobiliaria', position: 'center top' },
+  { src: '/assets/home_banner_3.jpeg', alt: 'Mostrador de atencion', position: 'center' },
+  { src: '/assets/home_banner_4.jpeg', alt: 'Oficina de trabajo', position: 'center' },
+  { src: '/assets/home_banner_5.jpeg', alt: 'Espacio interior de atencion', position: 'center' }
 ];
 
 const Home = () => {
@@ -51,7 +51,7 @@ const Home = () => {
         style={{
           backgroundImage: `url('${HERO_SLIDES[heroIndex].src}')`,
           backgroundPosition: HERO_SLIDES[heroIndex].position || 'center',
-          backgroundSize: HERO_SLIDES[heroIndex].size || 'cover',
+          backgroundSize: 'cover',
           backgroundColor: '#111827'
         }}
       >
