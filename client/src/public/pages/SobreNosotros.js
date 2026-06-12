@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 const carouselSlides = [
-  { src: '/assets/about_recepcion.jpg', alt: 'Recepción Mariana Fernández Inmobiliaria', label: 'Nuestra Recepción', contain: false },
-  { src: '/assets/about_oficina.jpg', alt: 'Atención Personalizada', label: 'Atención Personalizada', contain: false },
-  { src: '/assets/luxury_villa_hero.png', alt: 'Frente de propiedad destacada', label: 'Nuestra Oficina', contain: false },
+  { src: '/assets/home_banner_1.jpeg', alt: 'Fachada de la inmobiliaria', label: 'Nuestra Fachada', contain: false },
+  { src: '/assets/home_banner_2.jpeg', alt: 'Recepcion de la inmobiliaria', label: 'Recepcion', contain: false },
+  { src: '/assets/home_banner_3.jpeg', alt: 'Mostrador de atencion', label: 'Atencion Personalizada', contain: false },
+  { src: '/assets/home_banner_4.jpeg', alt: 'Oficina de trabajo', label: 'Oficina', contain: false },
+  { src: '/assets/home_banner_5.jpeg', alt: 'Espacio interior de atencion', label: 'Nuestro Espacio', contain: false },
 ];
 
 const SobreNosotros = () => {
@@ -40,11 +42,22 @@ const SobreNosotros = () => {
         <div className="about-accordions">
           <div className="accordion-item active">
             <div className="accordion-header">
-              <h3>Nuestra Empresa Hoy</h3>
+              <h3>Origen</h3>
             </div>
             <div className="accordion-body" style={{ display: 'block' }}>
               <p>
-                Somos una de las agencias inmobiliarias líderes con más de una década de experiencia conectando a las personas con su hogar ideal. Hoy en día, operamos con un equipo diverso de agentes, consultores y expertos en el mercado de bienes raíces que trabajan de la mano con tecnología de vanguardia para brindar resultados excepcionales.
+                Como una empresa familiar comprometida con la excelencia, Mariana Fernandez Servicio Inmobiliario inició su camino en Luján de Cuyo, una zona estratégica de gran desarrollo residencial y barrios privados. Nuestro crecimiento sostenido y prestigio actual son el reflejo de la confianza de los clientes, quienes nos recomiendan día a día por el buen trato, la honestidad y el compromiso brindados, demostrando que es posible combinar la calidez familiar con la máxima seriedad profesional.
+              </p>
+            </div>
+          </div>
+
+          <div className="accordion-item active">
+            <div className="accordion-header">
+              <h3>Nuestra Empresa</h3>
+            </div>
+            <div className="accordion-body" style={{ display: 'block' }}>
+              <p>
+                Con más de una década de trayectoria, nos enorgullece ser una empresa familiar que ha crecido hasta convertirse en un referente de confianza en el mercado. El corazón de nuestra agencia sigue siendo la atención personalizada, impulsada hoy por un equipo profesional que utiliza nuevas metodologías de trabajo para que cada cliente se sienta acompañado, seguro y en familia en la búsqueda de su hogar ideal.
               </p>
             </div>
           </div>
@@ -55,18 +68,7 @@ const SobreNosotros = () => {
             </div>
             <div className="accordion-body" style={{ display: 'block' }}>
               <p>
-                Nuestra meta es transformar el modelo tradicional de bienes raíces, enfocándonos en un enfoque basado 100% en la transparencia y centrado enteramente en las necesidades reales y los sueños de cada uno de nuestros clientes, garantizando siempre la máxima seguridad y confort en cada operación.
-              </p>
-            </div>
-          </div>
-
-          <div className="accordion-item active">
-            <div className="accordion-header">
-              <h3>Origen</h3>
-            </div>
-            <div className="accordion-body" style={{ display: 'block' }}>
-              <p>
-                Mariana Fernandez Servicio Inmobiliario nació del sueño y visión de un pequeño grupo de agentes locales apasionados por el buen servicio. Desde una modesta oficina inicial, fuimos creciendo sostenidamente gracias a las continuas recomendaciones de clientes satisfechos que valoraron nuestra atención familiar y profesional a la vez.
+                Para nosotros, cada cliente es único, por eso nos centramos en tus proyectos y en los sueños de tu familia, cuidando de vos y de tu patrimonio. Nos enfocamos en escucharte de verdad, poniendo tus necesidades reales en el centro de todo lo que hacemos. Trabajamos con total honestidad para tu tranquilidad y seguridad de estar en buenas manos durante cada paso del camino hacia tu nuevo hogar.
               </p>
             </div>
           </div>

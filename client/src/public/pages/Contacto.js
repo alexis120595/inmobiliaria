@@ -57,7 +57,7 @@ const Contacto = () => {
   return (
     <div className="contact-page">
       {/* Contact Hero Section */}
-      <section className="about-hero" style={{ backgroundImage: "url('/assets/contact_hero.png')" }}>
+      <section className="hero-section" style={{ backgroundImage: "url('/assets/home_banner_3.jpeg')" }}>
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <h1 className="hero-title">Estamos Aquí Para Ti</h1>

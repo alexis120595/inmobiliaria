@@ -10,8 +10,11 @@ const OPCIONES_OPERACION = [
 ];
 
 const HERO_SLIDES = [
-    { src: '/assets/mendoza_propiedad_1.jpg', alt: 'Frente de casa premium en Mendoza' },
-    { src: '/assets/mendoza_propiedad_2.jpg', alt: 'Jardin y piscina de propiedad en Mendoza' }
+  { src: '/assets/home_banner_1.jpeg', alt: 'Fachada de la inmobiliaria', position: 'center', size: 'cover' },
+  { src: '/assets/home_banner_2.jpeg', alt: 'Recepcion de la inmobiliaria', position: 'center top', size: 'contain' },
+  { src: '/assets/home_banner_3.jpeg', alt: 'Mostrador de atencion', position: 'center', size: 'cover' },
+  { src: '/assets/home_banner_4.jpeg', alt: 'Oficina de trabajo', position: 'center', size: 'cover' },
+  { src: '/assets/home_banner_5.jpeg', alt: 'Espacio interior de atencion', position: 'center', size: 'cover' }
 ];
 
 const Home = () => {
@@ -43,7 +46,15 @@ const Home = () => {
   return (
     <div className="home-page">
       {/* Hero Section Full Width */}
-      <section className="hero-section" style={{ backgroundImage: `url('${HERO_SLIDES[heroIndex].src}')` }}>
+      <section
+        className="hero-section"
+        style={{
+          backgroundImage: `url('${HERO_SLIDES[heroIndex].src}')`,
+          backgroundPosition: HERO_SLIDES[heroIndex].position || 'center',
+          backgroundSize: HERO_SLIDES[heroIndex].size || 'cover',
+          backgroundColor: '#111827'
+        }}
+      >
         <div className="hero-overlay"></div>
         <div className="hero-content">
           <h1 className="hero-title">Encuentra el hogar de tus sueños</h1>
