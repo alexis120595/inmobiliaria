@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Footer = () => {
-  const logoSrc = `${process.env.PUBLIC_URL}/assets/logo editado.png`;
+  const logoSrc = `${process.env.PUBLIC_URL}/assets/logo editado.png?v=20260615-2`;
 
   return (
     <footer className="public-footer">

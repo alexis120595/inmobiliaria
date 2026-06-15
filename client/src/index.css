@@ -400,8 +400,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .brand-logo-navbar {
-  height: 4.1rem;
-  max-width: min(100%, 27rem);
+  height: 5.2rem;
+  max-width: min(100%, 34rem);
 }
 
 .brand-text {
@@ -1626,8 +1626,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .brand-logo-footer {
-  height: 4.1rem;
-  max-width: min(100%, 22rem);
+  height: 5.2rem;
+  max-width: min(100%, 30rem);
 }
 
 .brand-text-footer {
@@ -1934,8 +1934,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .brand-logo-navbar {
-    height: 3.2rem;
-    max-width: min(100%, 20rem);
+    height: 4.1rem;
+    max-width: min(100%, 25rem);
   }
 
   .brand-text-footer {
@@ -1943,8 +1943,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .brand-logo-footer {
-    height: 3.4rem;
-    max-width: min(100%, 18rem);
+    height: 4.2rem;
+    max-width: min(100%, 24rem);
   }
 
   .footer-container {

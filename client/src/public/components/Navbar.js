@@ -5,7 +5,7 @@ import { useAuth } from '../../admin/context/AuthContext';
 const Navbar = () => {
   const { usuario, logout, isAuthenticated } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const logoSrc = `${process.env.PUBLIC_URL}/assets/logo editado.png`;
+  const logoSrc = `${process.env.PUBLIC_URL}/assets/logo editado.png?v=20260615-2`;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
