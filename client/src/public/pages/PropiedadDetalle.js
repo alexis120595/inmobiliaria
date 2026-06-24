@@ -36,6 +36,8 @@ const PropiedadDetalle = () => {
   const [propiedad, setPropiedad] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [contactForm, setContactForm] = useState({
     nombre: '',
     telefono: '',
@@ -85,6 +87,26 @@ const PropiedadDetalle = () => {
   const currentImgs = propiedad.imagenes || [];
   const mainImage = selectedImageUrl || (currentImgs.length > 0 ? currentImgs[0].url : '');
   const smallImages = currentImgs.filter(img => img.url !== mainImage).slice(0, 4);
+
+  const openLightboxByUrl = (url) => {
+    const index = currentImgs.findIndex((img) => img.url === url);
+    if (index >= 0) {
+      setLightboxIndex(index);
+      setIsLightboxOpen(true);
+    }
+  };
+
+  const closeLightbox = () => setIsLightboxOpen(false);
+
+  const goToPreviousImage = () => {
+    if (currentImgs.length < 2) return;
+    setLightboxIndex((prev) => (prev - 1 + currentImgs.length) % currentImgs.length);
+  };
+
+  const goToNextImage = () => {
+    if (currentImgs.length < 2) return;
+    setLightboxIndex((prev) => (prev + 1) % currentImgs.length);
+  };
 
   const handleContactChange = (e) => {
     const { name, value } = e.target;
@@ -219,8 +241,11 @@ const PropiedadDetalle = () => {
             backgroundSize: 'cover', 
             backgroundPosition: 'center',
             transition: 'background-image 0.3s ease-in-out',
-            height: '100%' 
-          }}>
+            height: '100%',
+            cursor: mainImage ? 'zoom-in' : 'default'
+          }}
+            onClick={() => mainImage && openLightboxByUrl(mainImage)}
+          >
             {!mainImage && <div style={{ display: 'flex', height: '100%', justifyContent: 'center', alignItems: 'center', color: '#94a3b8' }}>Sin imagen</div>}
           </div>
           
@@ -230,7 +255,11 @@ const PropiedadDetalle = () => {
                const isLast = index === 3;
                return (
                  <div key={index} 
-                   onClick={() => img && setSelectedImageUrl(img.url)}
+                   onClick={() => {
+                     if (!img) return;
+                     setSelectedImageUrl(img.url);
+                     openLightboxByUrl(img.url);
+                   }}
                    style={{ 
                    backgroundColor: '#e2e8f0', 
                    backgroundImage: img ? `url(${img.url})` : 'none', 
@@ -238,7 +267,7 @@ const PropiedadDetalle = () => {
                    backgroundPosition: 'center',
                    borderRadius: index === 1 ? '0 8px 0 0' : index === 3 ? '0 0 8px 0' : '0',
                    position: 'relative',
-                   cursor: img ? 'pointer' : 'default'
+                   cursor: img ? 'zoom-in' : 'default'
                  }}>
                     {isLast && currentImgs.length > 5 && (
                       <div style={{ position: 'absolute', bottom: '15px', right: '15px', backgroundColor: 'rgba(255,255,255,0.9)', padding: '5px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
@@ -525,6 +554,120 @@ const PropiedadDetalle = () => {
         </div>
         
       </div>
+
+      {isLightboxOpen && currentImgs.length > 0 && (
+        <div
+          onClick={closeLightbox}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.92)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <button
+            type="button"
+            onClick={closeLightbox}
+            style={{
+              position: 'absolute',
+              top: '16px',
+              right: '16px',
+              border: 'none',
+              borderRadius: '999px',
+              width: '40px',
+              height: '40px',
+              fontSize: '1.4rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              backgroundColor: '#ffffff',
+              cursor: 'pointer'
+            }}
+          >
+            ×
+          </button>
+
+          {currentImgs.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToPreviousImage();
+              }}
+              style={{
+                position: 'absolute',
+                left: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                border: 'none',
+                width: '44px',
+                height: '44px',
+                borderRadius: '999px',
+                fontSize: '1.4rem',
+                backgroundColor: 'rgba(255,255,255,0.92)',
+                color: '#0f172a',
+                cursor: 'pointer'
+              }}
+            >
+              ‹
+            </button>
+          )}
+
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              maxWidth: 'min(1200px, 95vw)',
+              maxHeight: '85vh',
+              width: '100%',
+              textAlign: 'center'
+            }}
+          >
+            <img
+              src={currentImgs[lightboxIndex]?.url}
+              alt={`Foto ${lightboxIndex + 1} de ${currentImgs.length}`}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '78vh',
+                borderRadius: '10px',
+                objectFit: 'contain',
+                boxShadow: '0 18px 40px rgba(0,0,0,0.45)'
+              }}
+            />
+            <div style={{ color: '#f8fafc', marginTop: '10px', fontWeight: 600, letterSpacing: '0.2px' }}>
+              {lightboxIndex + 1} / {currentImgs.length}
+            </div>
+          </div>
+
+          {currentImgs.length > 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                goToNextImage();
+              }}
+              style={{
+                position: 'absolute',
+                right: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                border: 'none',
+                width: '44px',
+                height: '44px',
+                borderRadius: '999px',
+                fontSize: '1.4rem',
+                backgroundColor: 'rgba(255,255,255,0.92)',
+                color: '#0f172a',
+                cursor: 'pointer'
+              }}
+            >
+              ›
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
