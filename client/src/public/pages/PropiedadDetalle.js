@@ -31,6 +31,12 @@ const normalizePhoneForWhatsApp = (phoneRaw) => {
   return digits;
 };
 
+const getImageUrl = (img) => {
+  if (!img) return '';
+  if (typeof img === 'string') return img;
+  return img.url || img.secure_url || img.imagen_url || img.path || '';
+};
+
 const PropiedadDetalle = () => {
   const { id } = useParams();
   const [propiedad, setPropiedad] = useState(null);
@@ -65,6 +71,39 @@ const PropiedadDetalle = () => {
     fetchPropiedad();
   }, [id]);
 
+  useEffect(() => {
+    // Evita arrastrar selección de imágenes al navegar entre propiedades.
+    setSelectedImageUrl(null);
+    setIsLightboxOpen(false);
+    setLightboxIndex(0);
+  }, [id]);
+
+  const currentImgsLength = Array.isArray(propiedad?.imagenes) ? propiedad.imagenes.length : 0;
+
+  useEffect(() => {
+    if (!isLightboxOpen) return undefined;
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsLightboxOpen(false);
+      }
+      if (event.key === 'ArrowLeft' && currentImgsLength > 1) {
+        setLightboxIndex((prev) => (prev - 1 + currentImgsLength) % currentImgsLength);
+      }
+      if (event.key === 'ArrowRight' && currentImgsLength > 1) {
+        setLightboxIndex((prev) => (prev + 1) % currentImgsLength);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isLightboxOpen, currentImgsLength]);
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -84,16 +123,19 @@ const PropiedadDetalle = () => {
 
   const direccionCompleta = [propiedad.localidad, propiedad.provincia, propiedad.pais].filter(Boolean).join(', ');
   const agenteAsignado = propiedad.Usuario || null;
-  const currentImgs = propiedad.imagenes || [];
-  const mainImage = selectedImageUrl || (currentImgs.length > 0 ? currentImgs[0].url : '');
+  const currentImgs = (Array.isArray(propiedad.imagenes) ? propiedad.imagenes : [])
+    .map((img) => ({ ...img, url: getImageUrl(img) }))
+    .filter((img) => Boolean(img.url));
+  const selectedExists = currentImgs.some((img) => img.url === selectedImageUrl);
+  const mainImage = selectedExists ? selectedImageUrl : (currentImgs.length > 0 ? currentImgs[0].url : '');
   const smallImages = currentImgs.filter(img => img.url !== mainImage).slice(0, 4);
 
   const openLightboxByUrl = (url) => {
     const index = currentImgs.findIndex((img) => img.url === url);
-    if (index >= 0) {
-      setLightboxIndex(index);
-      setIsLightboxOpen(true);
-    }
+    const nextIndex = index >= 0 ? index : 0;
+    if (!currentImgs[nextIndex]?.url) return;
+    setLightboxIndex(nextIndex);
+    setIsLightboxOpen(true);
   };
 
   const closeLightbox = () => setIsLightboxOpen(false);
@@ -562,7 +604,7 @@ const PropiedadDetalle = () => {
             position: 'fixed',
             inset: 0,
             backgroundColor: 'rgba(15, 23, 42, 0.92)',
-            zIndex: 1000,
+            zIndex: 9999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -571,7 +613,10 @@ const PropiedadDetalle = () => {
         >
           <button
             type="button"
-            onClick={closeLightbox}
+            onClick={(e) => {
+              e.stopPropagation();
+              closeLightbox();
+            }}
             style={{
               position: 'absolute',
               top: '16px',
