@@ -1,6 +1,52 @@
 const { Propiedad, Usuario, Imagen, Caracteristica } = require('../models');
 const { geocodeAddress } = require('../services/geocodingService');
 
+const toArray = (value) => {
+  if (value === undefined || value === null || value === '') return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return [value];
+};
+
+const parseOrdenImagenes = (rawOrden) => {
+  if (!rawOrden) return null;
+  try {
+    const parsed = typeof rawOrden === 'string' ? JSON.parse(rawOrden) : rawOrden;
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const buildOrderedImages = ({ existingImages = [], uploadedUrls = [], orderTokens = null }) => {
+  if (!orderTokens || orderTokens.length === 0) {
+    return [...existingImages, ...uploadedUrls];
+  }
+
+  const remainingExisting = [...existingImages];
+  const remainingUploads = [...uploadedUrls];
+  const ordered = [];
+
+  for (const token of orderTokens) {
+    if (token === 'nuevo') {
+      const nextUpload = remainingUploads.shift();
+      if (nextUpload) ordered.push(nextUpload);
+      continue;
+    }
+
+    if (typeof token === 'string' && token.startsWith('existente::')) {
+      const encodedUrl = token.slice('existente::'.length);
+      const decodedUrl = decodeURIComponent(encodedUrl);
+      const idx = remainingExisting.indexOf(decodedUrl);
+      if (idx >= 0) {
+        ordered.push(remainingExisting[idx]);
+        remainingExisting.splice(idx, 1);
+      }
+    }
+  }
+
+  return [...ordered, ...remainingExisting, ...remainingUploads];
+};
+
 // Obtener todas las propiedades
 exports.getAll = async (req, res) => {
   try {
@@ -9,6 +55,10 @@ exports.getAll = async (req, res) => {
         { model: Usuario, attributes: ['id', 'nombre', 'email', 'telefono', 'foto_url'] },
         { model: Imagen, as: 'imagenes' },
         { model: Caracteristica, through: { attributes: [] } }
+      ],
+      order: [
+        [{ model: Imagen, as: 'imagenes' }, 'orden', 'ASC'],
+        [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']
       ]
     });
     res.json(propiedades);
@@ -25,6 +75,10 @@ exports.getById = async (req, res) => {
         { model: Usuario, attributes: ['id', 'nombre', 'email', 'telefono', 'foto_url'] },
         { model: Imagen, as: 'imagenes' },
         { model: Caracteristica, through: { attributes: [] } }
+      ],
+      order: [
+        [{ model: Imagen, as: 'imagenes' }, 'orden', 'ASC'],
+        [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']
       ]
     });
     if (!propiedad) return res.status(404).json({ error: 'Propiedad no encontrada' });
@@ -38,15 +92,14 @@ exports.getById = async (req, res) => {
 exports.create = async (req, res) => {
   try {
     const { caracteristicas, ...propiedadData } = req.body;
-    let imagenes = req.body.imagenes || [];
-    if (!Array.isArray(imagenes)) {
-      imagenes = [imagenes];
-    }
-    
-    if (req.files && req.files.length > 0) {
-      const uploadedUrls = req.files.map(file => file.path);
-      imagenes = [...imagenes, ...uploadedUrls];
-    }
+    const existingImages = toArray(req.body.imagenes);
+    const uploadedUrls = req.files && req.files.length > 0 ? req.files.map(file => file.path) : [];
+    const orderTokens = parseOrdenImagenes(req.body.orden_imagenes);
+    const imagenes = buildOrderedImages({
+      existingImages,
+      uploadedUrls,
+      orderTokens
+    });
 
     // Sanitizar campos numéricos para evitar errores de casteo en PostgreSQL
     const numericFields = [
@@ -97,6 +150,10 @@ exports.create = async (req, res) => {
         { model: Usuario, attributes: ['id', 'nombre', 'email', 'telefono', 'foto_url'] },
         { model: Imagen, as: 'imagenes' },
         { model: Caracteristica, through: { attributes: [] } }
+      ],
+      order: [
+        [{ model: Imagen, as: 'imagenes' }, 'orden', 'ASC'],
+        [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']
       ]
     });
 
@@ -111,16 +168,15 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { caracteristicas, ...propiedadData } = req.body;
-    
-    let imagenes = req.body.imagenes || [];
-    if (!Array.isArray(imagenes)) {
-      imagenes = [imagenes];
-    }
-    
-    if (req.files && req.files.length > 0) {
-      const uploadedUrls = req.files.map(file => file.path);
-      imagenes = [...imagenes, ...uploadedUrls];
-    }
+
+    const existingImages = toArray(req.body.imagenes);
+    const uploadedUrls = req.files && req.files.length > 0 ? req.files.map(file => file.path) : [];
+    const orderTokens = parseOrdenImagenes(req.body.orden_imagenes);
+    const imagenes = buildOrderedImages({
+      existingImages,
+      uploadedUrls,
+      orderTokens
+    });
 
     // Sanitizar campos numéricos para evitar errores de casteo en PostgreSQL
     const numericFields = [
@@ -183,6 +239,10 @@ exports.update = async (req, res) => {
         { model: Usuario, attributes: ['id', 'nombre', 'email', 'telefono', 'foto_url'] },
         { model: Imagen, as: 'imagenes' },
         { model: Caracteristica, through: { attributes: [] } }
+      ],
+      order: [
+        [{ model: Imagen, as: 'imagenes' }, 'orden', 'ASC'],
+        [{ model: Imagen, as: 'imagenes' }, 'id', 'ASC']
       ]
     });
 

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DEPARTAMENTOS_MENDOZA } from '../data/departamentosMendoza';
 import DepartamentoSelect from '../components/DepartamentoSelect';
-import { PROPERTY_TYPE_OPTIONS } from '../../shared/propertyTypes';
+import API_URL from '../../config';
+import { PROPERTY_TYPE_OPTIONS, getCanonicalPropertyType } from '../../shared/propertyTypes';
 
 const OPCIONES_OPERACION = [
   { value: 'venta', label: 'Comprar' },
@@ -17,6 +18,57 @@ const HERO_SLIDES = [
   { src: '/assets/home_banner_5.jpeg', alt: 'Espacio interior de atencion', position: 'center' }
 ];
 
+const CATEGORY_CARDS = [
+  {
+    key: 'lote / terreno',
+    nombre: 'TERRENOS',
+    link: '/propiedades?tipo=terreno',
+    fallbackImage: '/assets/category_terrenos.png',
+    alt: 'Terrenos'
+  },
+  {
+    key: 'departamento',
+    nombre: 'DEPARTAMENTOS',
+    link: '/propiedades?tipo=departamento',
+    fallbackImage: '/assets/category_departamentos.png',
+    alt: 'Departamentos'
+  },
+  {
+    key: 'casa',
+    nombre: 'CASAS',
+    link: '/propiedades?tipo=casa',
+    fallbackImage: '/assets/category_casas.png',
+    alt: 'Casas'
+  }
+];
+
+const getImageUrl = (img) => {
+  if (!img) return '';
+  if (typeof img === 'string') return img;
+  return img.url || img.secure_url || img.imagen_url || img.path || '';
+};
+
+const getPortadaUrl = (imagenes) => {
+  if (!Array.isArray(imagenes) || imagenes.length === 0) return '';
+
+  const ordenadas = [...imagenes].sort((a, b) => {
+    const ordenA = Number.isFinite(Number(a?.orden)) ? Number(a.orden) : Number.MAX_SAFE_INTEGER;
+    const ordenB = Number.isFinite(Number(b?.orden)) ? Number(b.orden) : Number.MAX_SAFE_INTEGER;
+    if (ordenA !== ordenB) return ordenA - ordenB;
+    const idA = Number.isFinite(Number(a?.id)) ? Number(a.id) : Number.MAX_SAFE_INTEGER;
+    const idB = Number.isFinite(Number(b?.id)) ? Number(b.id) : Number.MAX_SAFE_INTEGER;
+    return idA - idB;
+  });
+
+  return getImageUrl(ordenadas[0]);
+};
+
+const getPropertyTimestamp = (propiedad) => {
+  const source = propiedad?.fecha_publicacion || propiedad?.createdAt || propiedad?.updatedAt;
+  const ts = source ? new Date(source).getTime() : NaN;
+  return Number.isNaN(ts) ? 0 : ts;
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [heroIndex, setHeroIndex] = useState(0);
@@ -24,6 +76,12 @@ const Home = () => {
   const [tipo, setTipo] = useState('');
   const [operacion, setOperacion] = useState('');
   const [selectedFlyer, setSelectedFlyer] = useState(null);
+  const [categoryImages, setCategoryImages] = useState(() => (
+    CATEGORY_CARDS.reduce((acc, card) => {
+      acc[card.key] = card.fallbackImage;
+      return acc;
+    }, {})
+  ));
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -31,6 +89,40 @@ const Home = () => {
     }, 5000);
 
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchCategoryCovers = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/propiedades`, { signal: controller.signal });
+        if (!response.ok) return;
+
+        const propiedades = await response.json();
+        if (!Array.isArray(propiedades)) return;
+
+        const nextImages = CATEGORY_CARDS.reduce((acc, card) => {
+          const candidatas = propiedades
+            .filter((p) => getCanonicalPropertyType(p?.tipo_propiedad) === card.key)
+            .sort((a, b) => getPropertyTimestamp(b) - getPropertyTimestamp(a));
+
+          const portada = candidatas.length > 0 ? getPortadaUrl(candidatas[0].imagenes) : '';
+          acc[card.key] = portada || card.fallbackImage;
+          return acc;
+        }, {});
+
+        setCategoryImages(nextImages);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          console.error('No se pudieron cargar las portadas dinámicas de categorías:', error);
+        }
+      }
+    };
+
+    fetchCategoryCovers();
+
+    return () => controller.abort();
   }, []);
 
   const handleSearch = (e) => {
@@ -116,32 +208,16 @@ const Home = () => {
       {/* Categorias Section */}
       <section className="categories-section">
         <div className="categories-grid">
-          <div className="category-card">
-            <Link to="/propiedades?tipo=terreno" className="category-img-link">
-              <img src="/assets/category_terrenos.png" alt="Terrenos" className="category-img" />
-            </Link>
-            <h3 className="category-name">TERRENOS</h3>
-            <div className="category-divider"></div>
-            <Link to="/propiedades?tipo=terreno" className="category-link">Ver Todos</Link>
-          </div>
-
-          <div className="category-card">
-            <Link to="/propiedades?tipo=departamento" className="category-img-link">
-              <img src="/assets/category_departamentos.png" alt="Departamentos" className="category-img" />
-            </Link>
-            <h3 className="category-name">DEPARTAMENTOS</h3>
-            <div className="category-divider"></div>
-            <Link to="/propiedades?tipo=departamento" className="category-link">Ver Todos</Link>
-          </div>
-
-          <div className="category-card">
-            <Link to="/propiedades?tipo=casa" className="category-img-link">
-              <img src="/assets/category_casas.png" alt="Casas" className="category-img" />
-            </Link>
-            <h3 className="category-name">CASAS</h3>
-            <div className="category-divider"></div>
-            <Link to="/propiedades?tipo=casa" className="category-link">Ver Todos</Link>
-          </div>
+          {CATEGORY_CARDS.map((card) => (
+            <div className="category-card" key={card.key}>
+              <Link to={card.link} className="category-img-link">
+                <img src={categoryImages[card.key] || card.fallbackImage} alt={card.alt} className="category-img" />
+              </Link>
+              <h3 className="category-name">{card.nombre}</h3>
+              <div className="category-divider"></div>
+              <Link to={card.link} className="category-link">Ver Todos</Link>
+            </div>
+          ))}
         </div>
       </section>
 

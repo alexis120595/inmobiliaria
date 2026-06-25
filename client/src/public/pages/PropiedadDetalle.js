@@ -123,9 +123,20 @@ const PropiedadDetalle = () => {
 
   const direccionCompleta = [propiedad.localidad, propiedad.provincia, propiedad.pais].filter(Boolean).join(', ');
   const agenteAsignado = propiedad.Usuario || null;
+  const getOrdenSeguro = (img) => {
+    const orden = Number(img?.orden);
+    return Number.isFinite(orden) ? orden : Number.MAX_SAFE_INTEGER;
+  };
+
+  const getIdSeguro = (img) => {
+    const id = Number(img?.id);
+    return Number.isFinite(id) ? id : Number.MAX_SAFE_INTEGER;
+  };
+
   const currentImgs = (Array.isArray(propiedad.imagenes) ? propiedad.imagenes : [])
     .map((img) => ({ ...img, url: getImageUrl(img) }))
-    .filter((img) => Boolean(img.url));
+    .filter((img) => Boolean(img.url))
+    .sort((a, b) => (getOrdenSeguro(a) - getOrdenSeguro(b)) || (getIdSeguro(a) - getIdSeguro(b)));
   const selectedExists = currentImgs.some((img) => img.url === selectedImageUrl);
   const mainImage = selectedExists ? selectedImageUrl : (currentImgs.length > 0 ? currentImgs[0].url : '');
   const smallImages = currentImgs.filter(img => img.url !== mainImage).slice(0, 4);

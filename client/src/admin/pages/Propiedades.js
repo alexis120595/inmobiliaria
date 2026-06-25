@@ -5,7 +5,7 @@ import { PROPERTY_TYPE_OPTIONS, getCanonicalPropertyType } from '../../shared/pr
 
 const API = `${API_URL}/api`;
 
-const MAX_IMAGENES = 10;
+const MAX_IMAGENES = 25;
 
 const initialForm = {
   titulo: '',
@@ -38,11 +38,12 @@ const Propiedades = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [caracteristicasBD, setCaracteristicasBD] = useState([]);
   const [form, setForm] = useState(initialForm);
-  const [archivos, setArchivos] = useState([]);
-  const [previews, setPreviews] = useState([]);
+  const [imagenesOrdenadas, setImagenesOrdenadas] = useState([]);
+  const [draggedIndex, setDraggedIndex] = useState(null);
   const [editId, setEditId] = useState(null);
   const [vista, setVista] = useState('formulario');
   const fileInputRef = useRef(null);
+  const imagenesOrdenadasRef = useRef([]);
 
   const fetchData = useCallback(async () => {
     const res = await fetch(`${API}/propiedades`);
@@ -70,12 +71,20 @@ const Propiedades = () => {
     fetchCaracteristicas();
   }, [fetchData, fetchUsuarios, fetchCaracteristicas]);
 
-  // Liberar URLs de objeto al desmontar o al cambiar previews
+  useEffect(() => {
+    imagenesOrdenadasRef.current = imagenesOrdenadas;
+  }, [imagenesOrdenadas]);
+
+  // Liberar URLs de objeto al desmontar
   useEffect(() => {
     return () => {
-      previews.forEach(url => URL.revokeObjectURL(url));
+      imagenesOrdenadasRef.current.forEach((img) => {
+        if (img.tipo === 'nuevo' && img.previewUrl) {
+          URL.revokeObjectURL(img.previewUrl);
+        }
+      });
     };
-  }, [previews]);
+  }, []);
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -86,22 +95,38 @@ const Propiedades = () => {
   };
 
   const handleFileChange = e => {
-    const nuevosArchivos = Array.from(e.target.files).slice(0, MAX_IMAGENES);
-    // Si ya hay archivos seleccionados, combinar hasta el límite
-    const combinados = [...archivos, ...nuevosArchivos].slice(0, MAX_IMAGENES);
-    // Revocar previews anteriores antes de reemplazar
-    previews.forEach(url => URL.revokeObjectURL(url));
-    const nuevasPreviews = combinados.map(f => URL.createObjectURL(f));
-    setArchivos(combinados);
-    setPreviews(nuevasPreviews);
+    const disponibles = MAX_IMAGENES - imagenesOrdenadas.length;
+    const nuevosArchivos = Array.from(e.target.files).slice(0, disponibles);
+    const nuevosItems = nuevosArchivos.map((file, idx) => ({
+      id: `nuevo-${Date.now()}-${idx}-${file.name}`,
+      tipo: 'nuevo',
+      file,
+      previewUrl: URL.createObjectURL(file)
+    }));
+
+    setImagenesOrdenadas(prev => [...prev, ...nuevosItems]);
     // Reset input para permitir re-seleccionar los mismos archivos
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeFile = (index) => {
-    URL.revokeObjectURL(previews[index]);
-    setArchivos(archivos.filter((_, i) => i !== index));
-    setPreviews(previews.filter((_, i) => i !== index));
+    setImagenesOrdenadas(prev => {
+      const imagen = prev[index];
+      if (imagen && imagen.tipo === 'nuevo' && imagen.previewUrl) {
+        URL.revokeObjectURL(imagen.previewUrl);
+      }
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const moveImage = (from, to) => {
+    if (from === to || from == null || to == null) return;
+    setImagenesOrdenadas(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
   };
 
   const handleCheckboxChange = (id) => {
@@ -118,9 +143,13 @@ const Propiedades = () => {
 
   const resetForm = () => {
     setForm(initialForm);
-    previews.forEach(url => URL.revokeObjectURL(url));
-    setArchivos([]);
-    setPreviews([]);
+    imagenesOrdenadas.forEach((img) => {
+      if (img.tipo === 'nuevo' && img.previewUrl) {
+        URL.revokeObjectURL(img.previewUrl);
+      }
+    });
+    setImagenesOrdenadas([]);
+    setDraggedIndex(null);
     setEditId(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -144,10 +173,32 @@ const Propiedades = () => {
       caracteristicas.forEach(c => formData.append('caracteristicas[]', c));
     }
 
-    // Agregar archivos físicos (hasta 10)
-    archivos.forEach(file => {
-      formData.append('imagenes_archivos', file);
+    // Mantener URLs existentes en el orden actual
+    const imagenesExistentes = imagenesOrdenadas
+      .filter((img) => img.tipo === 'existente' && img.url)
+      .map((img) => img.url);
+
+    imagenesExistentes.forEach((url) => {
+      formData.append('imagenes', url);
     });
+
+    // Enviar el orden completo (existentes + nuevos)
+    const ordenImagenes = imagenesOrdenadas.map((img) => (
+      img.tipo === 'existente' ? `existente::${encodeURIComponent(img.url)}` : 'nuevo'
+    ));
+    formData.append('orden_imagenes', JSON.stringify(ordenImagenes));
+
+    // Agregar archivos nuevos físicos respetando el orden relativo de los nuevos
+    imagenesOrdenadas
+      .filter((img) => img.tipo === 'nuevo' && img.file)
+      .forEach((img) => {
+        formData.append('imagenes_archivos', img.file);
+      });
+    
+    // Compatibilidad: si no hay imágenes totales, no se envía contenido de imágenes
+    if (imagenesOrdenadas.length === 0 && editId) {
+      formData.delete('orden_imagenes');
+    }
 
     try {
       const res = await fetch(url, {
@@ -196,9 +247,29 @@ const Propiedades = () => {
       caracteristicas: prop.Caracteristicas ? prop.Caracteristicas.map(c => c.id) : []
     });
     setEditId(prop.id);
-    previews.forEach(url => URL.revokeObjectURL(url));
-    setArchivos([]);
-    setPreviews([]);
+
+    imagenesOrdenadas.forEach((img) => {
+      if (img.tipo === 'nuevo' && img.previewUrl) {
+        URL.revokeObjectURL(img.previewUrl);
+      }
+    });
+
+    const imagenesProp = Array.isArray(prop.imagenes) ? [...prop.imagenes] : [];
+    imagenesProp.sort((a, b) => {
+      const ordenA = Number.isFinite(Number(a?.orden)) ? Number(a.orden) : Number.MAX_SAFE_INTEGER;
+      const ordenB = Number.isFinite(Number(b?.orden)) ? Number(b.orden) : Number.MAX_SAFE_INTEGER;
+      if (ordenA !== ordenB) return ordenA - ordenB;
+      const idA = Number.isFinite(Number(a?.id)) ? Number(a.id) : Number.MAX_SAFE_INTEGER;
+      const idB = Number.isFinite(Number(b?.id)) ? Number(b.id) : Number.MAX_SAFE_INTEGER;
+      return idA - idB;
+    });
+
+    setImagenesOrdenadas(imagenesProp.map((img, idx) => ({
+      id: `existente-${img.id || idx}-${img.url || ''}`,
+      tipo: 'existente',
+      url: img.url
+    })));
+    setDraggedIndex(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     setVista('formulario');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -228,7 +299,7 @@ const Propiedades = () => {
     return `${moneda || '$'} ${num}`;
   };
 
-  const puedeAgregarMas = archivos.length < MAX_IMAGENES;
+  const puedeAgregarMas = imagenesOrdenadas.length < MAX_IMAGENES;
 
   return (
     <div>
@@ -300,10 +371,10 @@ const Propiedades = () => {
                   fontWeight: 600,
                   padding: '0.25rem 0.75rem',
                   borderRadius: '20px',
-                  background: archivos.length >= MAX_IMAGENES ? '#fee2e2' : '#dbeafe',
-                  color: archivos.length >= MAX_IMAGENES ? '#991b1b' : '#1e40af'
+                  background: imagenesOrdenadas.length >= MAX_IMAGENES ? '#fee2e2' : '#dbeafe',
+                  color: imagenesOrdenadas.length >= MAX_IMAGENES ? '#991b1b' : '#1e40af'
                 }}>
-                  {archivos.length} / {MAX_IMAGENES} imágenes
+                  {imagenesOrdenadas.length} / {MAX_IMAGENES} imágenes
                 </span>
               </div>
 
@@ -323,7 +394,7 @@ const Propiedades = () => {
                     cursor: 'pointer',
                     background: 'var(--bg-secondary, #f9fafb)',
                     transition: 'border-color 0.2s, background 0.2s',
-                    marginBottom: previews.length > 0 ? '1rem' : 0
+                    marginBottom: imagenesOrdenadas.length > 0 ? '1rem' : 0
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary, #3b82f6)'; e.currentTarget.style.background = 'var(--bg-hover, #eff6ff)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color, #d1d5db)'; e.currentTarget.style.background = 'var(--bg-secondary, #f9fafb)'; }}
@@ -348,15 +419,33 @@ const Propiedades = () => {
               )}
 
               {/* Grid de miniaturas */}
-              {previews.length > 0 && (
+              {imagenesOrdenadas.length > 0 && (
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
                   gap: '0.75rem',
                   marginTop: puedeAgregarMas ? 0 : '0.5rem'
                 }}>
-                  {previews.map((src, index) => (
-                    <div key={index} style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color, #e5e7eb)', aspectRatio: '1' }}>
+                  {imagenesOrdenadas.map((img, index) => {
+                    const src = img.tipo === 'existente' ? img.url : img.previewUrl;
+                    return (
+                    <div
+                      key={img.id}
+                      draggable
+                      onDragStart={() => setDraggedIndex(index)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        moveImage(draggedIndex, index);
+                        setDraggedIndex(null);
+                      }}
+                      style={{
+                        position: 'relative',
+                        borderRadius: '10px',
+                        overflow: 'hidden',
+                        border: draggedIndex === index ? '2px solid #3b82f6' : '1px solid var(--border-color, #e5e7eb)',
+                        aspectRatio: '1'
+                      }}
+                    >
                       <img
                         src={src}
                         alt={`preview-${index}`}
@@ -403,8 +492,23 @@ const Propiedades = () => {
                       >
                         ✕
                       </button>
+                      {img.tipo === 'existente' && (
+                        <span style={{
+                          position: 'absolute',
+                          top: '4px',
+                          left: '4px',
+                          background: 'rgba(37,99,235,0.9)',
+                          color: '#fff',
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          padding: '1px 6px',
+                          borderRadius: '10px'
+                        }}>
+                          Guardada
+                        </span>
+                      )}
                     </div>
-                  ))}
+                  )})}
 
                   {/* Celda "Agregar más" dentro de la grilla cuando ya hay imágenes y hay lugar */}
                   {puedeAgregarMas && (
@@ -433,9 +537,9 @@ const Propiedades = () => {
               )}
 
               {/* Aviso si editando propiedad ya tiene imágenes */}
-              {editId && archivos.length === 0 && (
+              {editId && (
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted, #6b7280)', marginTop: '0.5rem', fontStyle: 'italic' }}>
-                  💡 Si no subís nuevas imágenes, las imágenes actuales de la propiedad se conservarán.
+                  💡 Podés arrastrar y soltar miniaturas para cambiar el orden. La imagen #1 será la portada.
                 </p>
               )}
             </div>
