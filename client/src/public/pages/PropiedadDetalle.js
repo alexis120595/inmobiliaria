@@ -41,6 +41,8 @@ const PropiedadDetalle = () => {
   const { id } = useParams();
   const [propiedad, setPropiedad] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [actionMessage, setActionMessage] = useState('');
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -77,6 +79,32 @@ const PropiedadDetalle = () => {
     setIsLightboxOpen(false);
     setLightboxIndex(0);
   }, [id]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const rawFavorites = window.localStorage.getItem('favoriteProperties');
+      const parsedFavorites = rawFavorites ? JSON.parse(rawFavorites) : [];
+      const favoriteIds = Array.isArray(parsedFavorites) ? parsedFavorites.map(String) : [];
+      setIsFavorite(favoriteIds.includes(String(id)));
+    } catch (error) {
+      console.error('Error reading favorite properties:', error);
+      setIsFavorite(false);
+    }
+
+    setActionMessage('');
+  }, [id]);
+
+  useEffect(() => {
+    if (!actionMessage) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setActionMessage('');
+    }, 2800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [actionMessage]);
 
   const currentImgsLength = Array.isArray(propiedad?.imagenes) ? propiedad.imagenes.length : 0;
 
@@ -164,6 +192,57 @@ const PropiedadDetalle = () => {
   const handleContactChange = (e) => {
     const { name, value } = e.target;
     setContactForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleFavoriteToggle = () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const rawFavorites = window.localStorage.getItem('favoriteProperties');
+      const parsedFavorites = rawFavorites ? JSON.parse(rawFavorites) : [];
+      const favoriteIds = Array.isArray(parsedFavorites) ? parsedFavorites.map(String) : [];
+      const propertyId = String(id);
+      const nextFavorites = isFavorite
+        ? favoriteIds.filter((favoriteId) => favoriteId !== propertyId)
+        : Array.from(new Set([...favoriteIds, propertyId]));
+
+      window.localStorage.setItem('favoriteProperties', JSON.stringify(nextFavorites));
+      setIsFavorite(!isFavorite);
+      setActionMessage(isFavorite ? 'Propiedad quitada de favoritos.' : 'Propiedad guardada en favoritos.');
+    } catch (error) {
+      console.error('Error updating favorite properties:', error);
+      setActionMessage('No se pudo actualizar favoritos.');
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (typeof window === 'undefined') return;
+
+    const propertyUrl = window.location.href;
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(propertyUrl);
+      } else {
+        const helperInput = document.createElement('input');
+        helperInput.value = propertyUrl;
+        document.body.appendChild(helperInput);
+        helperInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(helperInput);
+      }
+
+      setActionMessage('Link de la propiedad copiado.');
+    } catch (error) {
+      console.error('Error copying property link:', error);
+      setActionMessage('No se pudo copiar el link.');
+    }
+  };
+
+  const handlePrint = () => {
+    if (typeof window === 'undefined') return;
+
+    window.print();
   };
 
   const handleContactSubmit = async (e) => {
@@ -260,10 +339,46 @@ const PropiedadDetalle = () => {
           <div style={{ color: '#64748b' }}>
             <Link to="/" style={{ color: '#dc2626', textDecoration: 'none' }}>Home</Link> &gt; <Link to="/propiedades" style={{ color: '#dc2626', textDecoration: 'none' }}>{propiedad.tipo_propiedad ? propiedad.tipo_propiedad.charAt(0).toUpperCase() + propiedad.tipo_propiedad.slice(1) + 's' : 'Propiedades'}</Link> &gt; <span style={{ color: '#1e293b' }}>{propiedad.titulo}</span>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-             <button style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: '4px', padding: '5px 10px', color: '#475569', cursor: 'pointer' }}>♡</button>
-             <button style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: '4px', padding: '5px 10px', color: '#475569', cursor: 'pointer' }}>🔗</button>
-             <button style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: '4px', padding: '5px 10px', color: '#475569', cursor: 'pointer' }}>🖨️</button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={handleFavoriteToggle}
+                aria-label={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                title={isFavorite ? 'Quitar de favoritos' : 'Guardar en favoritos'}
+                style={{
+                  border: '1px solid #cbd5e1',
+                  background: isFavorite ? '#fee2e2' : '#fff',
+                  borderRadius: '4px',
+                  padding: '5px 10px',
+                  color: isFavorite ? '#dc2626' : '#475569',
+                  cursor: 'pointer'
+                }}
+              >
+                {isFavorite ? '♥' : '♡'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                aria-label="Copiar link de la propiedad"
+                title="Copiar link de la propiedad"
+                style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: '4px', padding: '5px 10px', color: '#475569', cursor: 'pointer' }}
+              >
+                🔗
+              </button>
+              <button
+                type="button"
+                onClick={handlePrint}
+                aria-label="Imprimir propiedad"
+                title="Imprimir propiedad"
+                style={{ border: '1px solid #cbd5e1', background: '#fff', borderRadius: '4px', padding: '5px 10px', color: '#475569', cursor: 'pointer' }}
+              >
+                🖨️
+              </button>
+            </div>
+            {actionMessage && (
+              <span style={{ color: '#475569', fontSize: '0.8rem', fontWeight: 500 }}>{actionMessage}</span>
+            )}
           </div>
         </div>
 
