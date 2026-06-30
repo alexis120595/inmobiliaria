@@ -228,26 +228,26 @@ const Home = () => {
           <p className="section-subtitle">Mantente informado sobre el mercado y tendencias</p>
         </div>
         <div className="blog-grid">
-          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_completo.jpg')}>
+          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_completo_julio_2026.png')}>
             <div className="blog-img-container">
-              <img src="/assets/news_alquiler_completo.jpg" alt="Actualización Alquileres Junio 2026" className="news-flyer-img" />
+              <img src="/assets/news_alquiler_completo_julio_2026.png" alt="Actualización Alquileres Julio 2026" className="news-flyer-img" />
               <div className="blog-zoom-overlay">🔍 Ampliar</div>
             </div>
             <div className="blog-content">
-              <span className="blog-date">Junio 2026</span>
+              <span className="blog-date">Julio 2026</span>
               <h3 className="blog-title">Actualización Alquileres Completo</h3>
               <p className="blog-excerpt">Informe integral del Colegio de Corredores Públicos Inmobiliarios de Mendoza con índices trimestrales, cuatrimestrales, semestrales y anuales.</p>
               <span className="read-more">Ver Completo →</span>
             </div>
           </article>
           
-          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_icl.jpg')}>
+          <article className="blog-card" style={{ cursor: 'pointer' }} onClick={() => setSelectedFlyer('/assets/news_alquiler_icl_julio_2026.png')}>
             <div className="blog-img-container">
-              <img src="/assets/news_alquiler_icl.jpg" alt="ICL BCRA Junio 2026" className="news-flyer-img" />
+              <img src="/assets/news_alquiler_icl_julio_2026.png" alt="ICL BCRA Julio 2026" className="news-flyer-img" />
               <div className="blog-zoom-overlay">🔍 Ampliar</div>
             </div>
             <div className="blog-content">
-              <span className="blog-date">Junio 2026</span>
+              <span className="blog-date">Julio 2026</span>
               <h3 className="blog-title">Índice ICL BCRA</h3>
               <p className="blog-excerpt">Detalle del Índice de Contratos de Locación publicado por el Banco Central para calcular los incrementos en contratos de vivienda.</p>
               <span className="read-more">Ver Tabla →</span>
