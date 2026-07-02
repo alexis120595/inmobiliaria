@@ -1286,6 +1286,8 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  display: block;
+  line-height: 1.25;
 }
 
 /* Glassmorphism Navigation Buttons */
@@ -1364,9 +1366,16 @@ h1, h2, h3, h4, h5, h6 {
   }
   .carousel-slide-label {
     font-size: 1.1rem;
+    max-width: calc(100% - 0.5rem);
+    width: 100%;
+    text-align: center;
+    margin: 0 auto;
   }
   .carousel-slide-overlay {
-    padding: 2.5rem 1.5rem 1.5rem;
+    padding: 2.5rem 1.5rem 3.9rem;
+  }
+  .carousel-indicators {
+    bottom: 14px;
   }
   .carousel-nav-btn {
     width: 40px;
@@ -2645,6 +2654,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .mapa-container:hover {
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.16);
+}
+
+/* Evita que la regla global de img rompa el render de tiles de Leaflet */
+.leaflet-container img,
+.leaflet-container svg {
+  max-width: none !important;
 }
 
 /* Badge de cantidad de propiedades en el mapa */
