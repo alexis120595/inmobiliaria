@@ -142,8 +142,8 @@ const Propiedades = () => {
   };
 
   return (
-    <div className="page-container" style={{ backgroundColor: '#f3f4f6', minHeight: '100vh', paddingBottom: '40px' }}>
-      <div className="page-header" style={{ paddingTop: '40px' }}>
+    <div className="page-container properties-page" style={{ backgroundColor: '#f3f4f6', minHeight: '100vh', paddingBottom: '40px' }}>
+      <div className="page-header properties-page-header" style={{ paddingTop: '40px' }}>
         <h1 className="page-title">Todas las Propiedades</h1>
         <p className="page-subtitle">Explora nuestro catálogo completo y encuentra el lugar ideal para ti.</p>
       </div>
@@ -259,7 +259,7 @@ const Propiedades = () => {
 
       {/* Contador de resultados + Toggle de vista */}
       {!loading && (
-        <div style={{ 
+        <div className="properties-toolbar" style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
@@ -305,7 +305,7 @@ const Propiedades = () => {
       )}
 
       {/* VISTA LISTA (Grid de cards) */}
-      <div className="properties-grid" style={{ 
+      <div className="properties-grid properties-catalog-grid" style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
         gap: '30px', 

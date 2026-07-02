@@ -329,13 +329,13 @@ const PropiedadDetalle = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', paddingBottom: '60px', fontFamily: 'Inter, sans-serif' }}>
+    <div className="property-detail-page" style={{ backgroundColor: '#f8fafc', paddingBottom: '60px', fontFamily: 'Inter, sans-serif' }}>
       
       {/* Contenedor principal centrado */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', paddingTop: '30px' }}>
+      <div className="detail-page-container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', paddingTop: '30px' }}>
         
         {/* Breadcrumbs y Acciones superiores */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', marginBottom: '15px' }}>
+        <div className="detail-topbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.9rem', marginBottom: '15px' }}>
           <div style={{ color: '#64748b' }}>
             <Link to="/" style={{ color: '#dc2626', textDecoration: 'none' }}>Home</Link> &gt; <Link to="/propiedades" style={{ color: '#dc2626', textDecoration: 'none' }}>{propiedad.tipo_propiedad ? propiedad.tipo_propiedad.charAt(0).toUpperCase() + propiedad.tipo_propiedad.slice(1) + 's' : 'Propiedades'}</Link> &gt; <span style={{ color: '#1e293b' }}>{propiedad.titulo}</span>
           </div>
@@ -383,7 +383,7 @@ const PropiedadDetalle = () => {
         </div>
 
         {/* Título y Precio */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '5px' }}>
+        <div className="detail-title-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: '5px' }}>
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', margin: '0 0 10px 0', flex: '1 1 60%' }}>{propiedad.titulo}</h1>
           <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#1e293b', margin: '0 0 10px 0' }}>{propiedad.moneda || 'U$D'} {propiedad.precio ? Number(propiedad.precio).toLocaleString('es-AR') : 'Consultar'}</h2>
         </div>
@@ -401,7 +401,7 @@ const PropiedadDetalle = () => {
         </div>
 
         {/* Galería de Imágenes */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px', height: '450px', marginBottom: '30px' }}>
+        <div className="detail-gallery" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px', height: '450px', marginBottom: '30px' }}>
           <div style={{ 
             backgroundColor: '#e2e8f0', 
             borderRadius: '8px 0 0 8px', 
@@ -449,17 +449,17 @@ const PropiedadDetalle = () => {
         </div>
 
         {/* Layout Dos Columnas */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px', alignItems: 'start' }}>
+        <div className="detail-content-layout" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '40px', alignItems: 'start' }}>
           
           {/* Columna Izquierda (Contenido) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+          <div className="detail-main-column" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             
             {/* Visión General */}
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <div className="detail-section-card detail-overview-card" style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '25px', marginTop: 0 }}>Visión general</h3>
               
-              <div style={{ display: 'flex', gap: '20px' }}>
-                <div style={{ flex: '2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '25px 15px' }}>
+              <div className="detail-overview-layout" style={{ display: 'flex', gap: '20px' }}>
+                <div className="detail-overview-grid" style={{ flex: '2', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '25px 15px' }}>
                   
                   <div>
                     <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '8px' }}><span style={{fontSize: '1.2rem', color: '#64748b'}}>🏠</span> {propiedad.tipo_propiedad ? (propiedad.tipo_propiedad.charAt(0).toUpperCase() + propiedad.tipo_propiedad.slice(1)) : 'Casa'}</div>
@@ -557,7 +557,7 @@ const PropiedadDetalle = () => {
             </div>
 
             {/* Descripción */}
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <div className="detail-section-card detail-description-card" style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '20px', marginTop: 0 }}>Descripción</h3>
               <div style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
                 {propiedad.descripcion || 'Propiedad sin descripción detallada proporcionada.'}
@@ -565,10 +565,10 @@ const PropiedadDetalle = () => {
             </div>
 
             {/* Características / Amenidades */}
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <div className="detail-section-card detail-characteristics-card" style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '30px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '25px', marginTop: 0 }}>Características</h3>
               {propiedad.Caracteristicas && propiedad.Caracteristicas.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                <div className="detail-characteristics-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                   {propiedad.Caracteristicas.map(carac => (
                     <div key={carac.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontSize: '0.95rem' }}>
                       <span style={{ color: '#2563eb' }}>✓</span> {carac.nombre}
@@ -583,8 +583,8 @@ const PropiedadDetalle = () => {
           </div>
 
           {/* Columna Derecha (Sidebar Sticky Form) */}
-          <div style={{ position: 'sticky', top: '20px' }}>
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '25px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', borderTop: '4px solid var(--primary-color)' }}>
+          <div className="detail-sidebar" style={{ position: 'sticky', top: '20px' }}>
+            <div className="contact-agent-card" style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '25px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', borderTop: '4px solid var(--primary-color)' }}>
               
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '25px', paddingBottom: '20px', borderBottom: '1px solid #e2e8f0' }}>
                 <div style={{ width: '50px', height: '50px', borderRadius: '50%', backgroundColor: '#f1f5f9', backgroundImage: propiedad.Usuario && propiedad.Usuario.foto_url ? `url(${propiedad.Usuario.foto_url})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center', marginRight: '15px', overflow: 'hidden', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -602,7 +602,7 @@ const PropiedadDetalle = () => {
                 </div>
               </div>
 
-              <form style={{ display: 'flex', flexDirection: 'column', gap: '15px' }} onSubmit={handleContactSubmit}>
+              <form className="agent-contact-form" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }} onSubmit={handleContactSubmit}>
                 <input
                   type="text"
                   name="nombre"
