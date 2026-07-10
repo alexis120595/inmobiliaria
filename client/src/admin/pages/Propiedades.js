@@ -624,7 +624,27 @@ const Propiedades = () => {
                             </div>
                           )}
                         </td>
-                        <td style={{ fontWeight: 600, maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{prop.titulo}</td>
+                        <td style={{ maxWidth: '240px' }}>
+                          <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {prop.titulo}
+                          </div>
+                          <div style={{ marginTop: '0.45rem', display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <button
+                              className="btn btn-primary"
+                              style={{ fontSize: '0.72rem', padding: '0.3rem 0.55rem' }}
+                              onClick={() => handleEdit(prop)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              className="btn btn-danger"
+                              style={{ fontSize: '0.72rem', padding: '0.3rem 0.55rem' }}
+                              onClick={() => handleDelete(prop.id)}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
+                        </td>
                         <td>{prop.tipo_propiedad}</td>
                         <td>
                           <span style={{
