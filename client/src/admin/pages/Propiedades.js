@@ -603,7 +603,7 @@ const Propiedades = () => {
                     <th>Ubicación</th>
                     <th>Precio</th>
                     <th>Estado</th>
-                    <th style={{ textAlign: 'center' }}>Acciones</th>
+                    <th style={{ textAlign: 'center', position: 'sticky', right: 0, background: '#f9fafb', zIndex: 2, boxShadow: '-8px 0 12px -10px rgba(0,0,0,0.2)' }}>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -654,7 +654,7 @@ const Propiedades = () => {
                             {prop.estado}
                           </span>
                         </td>
-                        <td>
+                        <td style={{ position: 'sticky', right: 0, background: '#fff', zIndex: 1, boxShadow: '-8px 0 12px -10px rgba(0,0,0,0.25)' }}>
                           <div className="table-actions">
                             <button className="btn btn-primary" style={{ fontSize: '0.8rem', padding: '0.4rem 0.75rem' }} onClick={() => handleEdit(prop)}>
                               ✏️ Editar
