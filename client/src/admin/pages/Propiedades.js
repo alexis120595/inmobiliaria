@@ -172,6 +172,7 @@ const Propiedades = () => {
     if (caracteristicas && Array.isArray(caracteristicas)) {
       caracteristicas.forEach(c => formData.append('caracteristicas[]', c));
     }
+    formData.append('caracteristicas_provided', '1');
 
     // Mantener URLs existentes en el orden actual
     const imagenesExistentes = imagenesOrdenadas
@@ -187,6 +188,7 @@ const Propiedades = () => {
       img.tipo === 'existente' ? `existente::${encodeURIComponent(img.url)}` : 'nuevo'
     ));
     formData.append('orden_imagenes', JSON.stringify(ordenImagenes));
+    formData.append('imagenes_provided', '1');
 
     // Agregar archivos nuevos físicos respetando el orden relativo de los nuevos
     imagenesOrdenadas
@@ -195,11 +197,6 @@ const Propiedades = () => {
         formData.append('imagenes_archivos', img.file);
       });
     
-    // Compatibilidad: si no hay imágenes totales, no se envía contenido de imágenes
-    if (imagenesOrdenadas.length === 0 && editId) {
-      formData.delete('orden_imagenes');
-    }
-
     try {
       const res = await fetch(url, {
         method,
@@ -275,7 +272,16 @@ const Propiedades = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (propiedadOrId) => {
+    const id = typeof propiedadOrId === 'object' && propiedadOrId !== null
+      ? propiedadOrId.id
+      : propiedadOrId;
+
+    if (!id) {
+      alert('No se pudo identificar la propiedad a eliminar.');
+      return;
+    }
+
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta propiedad? Esta acción no se puede deshacer.')) return;
     try {
       const res = await fetch(`${API}/propiedades/${id}`, {
@@ -286,7 +292,14 @@ const Propiedades = () => {
         alert('Propiedad eliminada correctamente.');
         fetchData();
       } else {
-        alert('Error al eliminar la propiedad.');
+        let mensaje = 'Error al eliminar la propiedad.';
+        try {
+          const errorData = await res.json();
+          if (errorData?.error) mensaje = errorData.error;
+        } catch (_) {
+          // Si la respuesta no es JSON, mantenemos mensaje genérico.
+        }
+        alert(mensaje);
       }
     } catch (err) {
       alert('Error de conexión con el servidor.');

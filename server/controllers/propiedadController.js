@@ -1,4 +1,5 @@
-const { Propiedad, Usuario, Imagen, Caracteristica } = require('../models');
+const { Propiedad, Usuario, Imagen, Caracteristica, PropiedadCaracteristica, Contacto } = require('../models');
+const sequelize = require('../config/database');
 const { geocodeAddress } = require('../services/geocodingService');
 
 const toArray = (value) => {
@@ -15,6 +16,23 @@ const parseOrdenImagenes = (rawOrden) => {
   } catch {
     return null;
   }
+};
+
+const parseCaracteristicas = (body = {}) => {
+  const raw = body.caracteristicas ?? body['caracteristicas[]'];
+  const explicitProvided = body.caracteristicas_provided === '1' || body.caracteristicas_provided === 1 || body.caracteristicas_provided === true;
+  if (raw === undefined) return { ids: [], provided: explicitProvided };
+
+  const values = toArray(raw)
+    .flatMap((item) => {
+      if (typeof item !== 'string') return [item];
+      // Soporta payload "1,2,3" además de múltiples campos repetidos.
+      return item.split(',');
+    })
+    .map((item) => Number(item))
+    .filter((item) => Number.isInteger(item) && item > 0);
+
+  return { ids: [...new Set(values)], provided: true };
 };
 
 const buildOrderedImages = ({ existingImages = [], uploadedUrls = [], orderTokens = null }) => {
@@ -91,7 +109,9 @@ exports.getById = async (req, res) => {
 // Crear propiedad
 exports.create = async (req, res) => {
   try {
-    const { caracteristicas, ...propiedadData } = req.body;
+    const { ids: caracteristicas } = parseCaracteristicas(req.body);
+    const { caracteristicas: _legacyCaracteristicas, ...propiedadData } = req.body;
+    delete propiedadData['caracteristicas[]'];
     const existingImages = toArray(req.body.imagenes);
     const uploadedUrls = req.files && req.files.length > 0 ? req.files.map(file => file.path) : [];
     const orderTokens = parseOrdenImagenes(req.body.orden_imagenes);
@@ -132,7 +152,7 @@ exports.create = async (req, res) => {
 
     const propiedad = await Propiedad.create(propiedadData);
     
-    if (caracteristicas && Array.isArray(caracteristicas)) {
+    if (caracteristicas.length > 0) {
       await propiedad.setCaracteristicas(caracteristicas);
     }
     
@@ -167,7 +187,9 @@ exports.create = async (req, res) => {
 // Actualizar propiedad
 exports.update = async (req, res) => {
   try {
-    const { caracteristicas, ...propiedadData } = req.body;
+    const { ids: caracteristicas, provided: caracteristicasProvided } = parseCaracteristicas(req.body);
+    const { caracteristicas: _legacyCaracteristicas, ...propiedadData } = req.body;
+    delete propiedadData['caracteristicas[]'];
 
     const existingImages = toArray(req.body.imagenes);
     const uploadedUrls = req.files && req.files.length > 0 ? req.files.map(file => file.path) : [];
@@ -218,11 +240,19 @@ exports.update = async (req, res) => {
 
     await propiedad.update(propiedadData);
     
-    if (caracteristicas && Array.isArray(caracteristicas)) {
+    if (caracteristicasProvided) {
       await propiedad.setCaracteristicas(caracteristicas);
     }
-    
-    if (imagenes && imagenes.length > 0) {
+
+    const imagePayloadProvided =
+      req.body.imagenes_provided === '1' ||
+      req.body.imagenes_provided === 1 ||
+      req.body.imagenes_provided === true ||
+      req.body.orden_imagenes !== undefined ||
+      req.body.imagenes !== undefined ||
+      (req.files && req.files.length > 0);
+
+    if (imagePayloadProvided) {
       await Imagen.destroy({ where: { propiedad_id: propiedad.id } });
       const imagenesArray = imagenes.map((url, index) => ({
         url,
@@ -256,11 +286,25 @@ exports.update = async (req, res) => {
 // Eliminar propiedad
 exports.remove = async (req, res) => {
   try {
-    const propiedad = await Propiedad.findByPk(req.params.id);
+    const propiedadId = Number(req.params.id);
+    if (!Number.isInteger(propiedadId) || propiedadId <= 0) {
+      return res.status(400).json({ error: 'ID de propiedad inválido' });
+    }
+
+    const propiedad = await Propiedad.findByPk(propiedadId);
     if (!propiedad) return res.status(404).json({ error: 'Propiedad no encontrada' });
-    await propiedad.destroy();
+
+    await sequelize.transaction(async (transaction) => {
+      // Limpieza defensiva para evitar fallos por restricciones FK según el estado real de la BD.
+      await Imagen.destroy({ where: { propiedad_id: propiedadId }, transaction });
+      await PropiedadCaracteristica.destroy({ where: { propiedad_id: propiedadId }, transaction });
+      await Contacto.update({ propiedad_id: null }, { where: { propiedad_id: propiedadId }, transaction });
+      await propiedad.destroy({ transaction });
+    });
+
     res.json({ message: 'Propiedad eliminada' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error al eliminar propiedad:', err);
+    res.status(500).json({ error: 'No se pudo eliminar la propiedad. Verifica relaciones asociadas e inténtalo nuevamente.' });
   }
 };

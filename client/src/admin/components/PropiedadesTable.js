@@ -58,7 +58,7 @@ const PropiedadesTable = ({ propiedades, onEdit, onDelete }) => (
             <td>
               <div className="table-actions">
                 <button onClick={() => onEdit(p)} className="btn btn-primary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>Editar</button>
-                <button onClick={() => onDelete(p)} className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>Eliminar</button>
+                <button onClick={() => onDelete(p.id)} className="btn btn-danger" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }}>Eliminar</button>
               </div>
             </td>
           </tr>
