@@ -26,9 +26,8 @@ const Footer = () => {
           <div className="footer-contact-icon" aria-hidden="true">◎</div>
           <p className="footer-contact-text">Seguinos en nuestras redes</p>
           <div className="footer-social-links" aria-label="Redes sociales">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer">Facebook</a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a>
-            <a href="https://linkedin.com" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a href="https://www.facebook.com/profile.php?id=100064110337474&locale=es_LA" target="_blank" rel="noreferrer">Facebook</a>
+            <a href="https://www.instagram.com/inmobiliaria.fernandez" target="_blank" rel="noreferrer">Instagram</a>
           </div>
         </div>
 
